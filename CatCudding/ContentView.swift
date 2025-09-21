@@ -675,7 +675,7 @@ struct WelcomeScreen: View {
                             .offset(x: geometry.size.width * 0.2, y: -geometry.size.height * 0.3)
                     }
                 }
-                
+            
                 VStack(spacing: 30) {
                     // Logo
                     ZStack {
