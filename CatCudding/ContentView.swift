@@ -1,4 +1,13 @@
 // MARK: - Full Screen Celebration View
+import SwiftUI
+import AVFoundation
+import Combine
+import PhotosUI
+import Vision
+import CoreImage
+import CoreImage.CIFilterBuiltins
+
+// MARK: - Full Screen Celebration View
 struct FullScreenCelebrationView: View {
     let imageSource: Any?
     let catName: String
@@ -32,16 +41,14 @@ struct FullScreenCelebrationView: View {
                 
                 // Floating celebration elements
                 ForEach(celebrationHearts) { heart in
-                    Image(systemName: "heart.fill")
-                        .foregroundColor(.red)
+                    Text("🐾")
                         .font(.system(size: 30))
                         .position(x: heart.x, y: heart.y)
                         .opacity(heart.opacity)
                 }
                 
                 ForEach(celebrationSparkles) { sparkle in
-                    Image(systemName: "star.fill")
-                        .foregroundColor(.yellow)
+                    Text("🐾")
                         .font(.system(size: 25))
                         .position(x: sparkle.x, y: sparkle.y)
                         .opacity(sparkle.opacity)
@@ -127,6 +134,8 @@ struct FullScreenCelebrationView: View {
                     Button(action: {
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                             gameState.showFullScreenCelebration = false
+                            // Reset happiness to start over
+                            gameState.happiness = 0
                         }
                     }) {
                         Text("Continue Playing")
@@ -159,7 +168,7 @@ struct FullScreenCelebrationView: View {
                 catImageScale = 1.0
             }
             
-            // Generate celebration effects
+            // Generate celebration effects using screen size
             generateCelebrationEffects(in: UIScreen.main.bounds.size)
         }
     }
@@ -218,13 +227,6 @@ struct FullScreenCelebrationView: View {
         }
     }
 }
-import SwiftUI
-import AVFoundation
-import Combine
-import PhotosUI
-import Vision
-import CoreImage
-import CoreImage.CIFilterBuiltins
 
 // MARK: - Models
 struct Cat: Identifiable, Equatable {
@@ -258,6 +260,22 @@ struct FloatingElement: Identifiable {
     var opacity: Double = 1.0
 }
 
+struct Treat: Identifiable {
+    let id = UUID()
+    var x: CGFloat
+    var y: CGFloat
+    var isEaten: Bool = false
+    var opacity: Double = 1.0
+    var scale: CGFloat = 1.0
+}
+
+struct MouseToy: Identifiable {
+    let id = UUID()
+    var x: CGFloat
+    var y: CGFloat
+    var rotation: Double = 0
+}
+
 // MARK: - Game State
 class GameState: ObservableObject {
     @Published var currentScreen: ScreenType = .welcome
@@ -270,6 +288,22 @@ class GameState: ObservableObject {
     @Published var customCatImage: UIImage?
     @Published var customCatName: String = ""
     @Published var showingImagePicker: Bool = false
+    
+    // Game mode
+    @Published var currentMode: GameMode = .cuddle
+    
+    // Treats feature
+    @Published var treats: [Treat] = []
+    @Published var isFeeding: Bool = false
+    @Published var showFeedingComplete: Bool = false
+    @Published var isTreatsButtonDisabled: Bool = false
+    
+    // Toys feature
+    @Published var mouseToy: MouseToy?
+    @Published var isPlayingWithToy: Bool = false
+    @Published var catIsExcited: Bool = false
+    @Published var catZoomedIn: Bool = false
+    @Published var showToysComplete: Bool = false
     
     let cats = [
         Cat(name: "Whiskers", description: "Super playful!", breed: "Orange Tabby", color: .orange, emoji: "🧡"),
@@ -501,11 +535,292 @@ class GameState: ObservableObject {
         sparkles.removeAll()
         isBeingPetted = false
         showFullScreenCelebration = false
+        
+        // Reset treats
+        treats.removeAll()
+        isFeeding = false
+        showFeedingComplete = false
+        isTreatsButtonDisabled = false
+        
+        // Reset toys
+        mouseToy = nil
+        isPlayingWithToy = false
+        catIsExcited = false
+        catZoomedIn = false
+        showToysComplete = false
+        
+        // Reset to cuddle mode
+        currentMode = .cuddle
+    }
+    
+    // MARK: - Mode Switching
+    func switchMode(to newMode: GameMode) {
+        guard newMode != currentMode else { return }
+        
+        // Clean up current mode
+        switch currentMode {
+        case .cuddle:
+            hearts.removeAll()
+            sparkles.removeAll()
+            isBeingPetted = false
+        case .treats:
+            treats.removeAll()
+            isFeeding = false
+            showFeedingComplete = false
+            isTreatsButtonDisabled = false
+        case .toys:
+            mouseToy = nil
+            isPlayingWithToy = false
+            catIsExcited = false
+            catZoomedIn = false
+            showToysComplete = false
+        }
+        
+        // Reset happiness and celebration
+        withAnimation(.easeOut(duration: 0.3)) {
+            happiness = 0
+        }
+        showFullScreenCelebration = false
+        
+        // Switch to new mode
+        currentMode = newMode
+    }
+    
+    // MARK: - Treats Feature
+    func startFeeding(in size: CGSize) {
+        guard !isFeeding && currentMode == .treats else { return }
+        
+        isFeeding = true
+        isTreatsButtonDisabled = true
+        
+        // Generate 8 fish treats around the cat
+        let treatCount = 8
+        let centerX = size.width / 2
+        let centerY = size.height / 2
+        let radius: CGFloat = 120
+        
+        for i in 0..<treatCount {
+            let angle = (CGFloat(i) / CGFloat(treatCount)) * 2 * .pi
+            let x = centerX + cos(angle) * radius
+            let y = centerY + sin(angle) * radius
+            
+            let treat = Treat(x: x, y: y)
+            treats.append(treat)
+        }
+        
+        // Start eating treats one by one
+        eatNextTreat()
+    }
+    
+    private func eatNextTreat() {
+        // Check if we're still in treats mode and have treats
+        guard currentMode == .treats, !treats.isEmpty else {
+            return
+        }
+        
+        // Find the next uneaten treat
+        guard let nextTreatIndex = treats.firstIndex(where: { !$0.isEaten }) else {
+            // All treats eaten, complete the feeding
+            completeFeedingSession()
+            return
+        }
+        
+        // Mark as being eaten
+        treats[nextTreatIndex].isEaten = true
+        
+        // Animate treat disappearing
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            guard let self = self, self.currentMode == .treats, nextTreatIndex < self.treats.count else {
+                return
+            }
+            
+            withAnimation(.easeOut(duration: 0.5)) {
+                self.treats[nextTreatIndex].opacity = 0
+                self.treats[nextTreatIndex].scale = 0.5
+            }
+            
+            // Update happiness progress (using existing happiness meter)
+            let progressIncrement = 100.0 / Double(self.treats.count)
+            withAnimation(.easeInOut(duration: 0.3)) {
+                self.happiness = min(self.happiness + progressIncrement, 100)
+            }
+            
+            // Play sound effect
+            AudioServicesPlaySystemSound(1103)
+            
+            // Continue to next treat
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+                self?.eatNextTreat()
+            }
+        }
+    }
+    
+    private func completeFeedingSession() {
+        // Check if we're still in treats mode
+        guard currentMode == .treats else {
+            return
+        }
+        
+        // Show completion message
+        withAnimation {
+            showFeedingComplete = true
+        }
+        
+        // Check if happiness reached 100%
+        if happiness >= 100 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                guard let self = self, self.currentMode == .treats else { return }
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                    self.showFullScreenCelebration = true
+                }
+            }
+        }
+        
+        // Hide message after 2 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            guard let self = self else { return }
+            withAnimation {
+                self.showFeedingComplete = false
+            }
+            
+            // Clean up and reset
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                guard let self = self else { return }
+                self.treats.removeAll()
+                self.isFeeding = false
+                self.isTreatsButtonDisabled = false
+            }
+        }
+    }
+    
+    // MARK: - Toys Feature
+    func startPlayingWithToys(in size: CGSize) {
+        guard !isPlayingWithToy && currentMode == .toys else { return }
+        
+        isPlayingWithToy = true
+        catIsExcited = true
+        
+        // Spawn mouse at top-left corner (safe area)
+        mouseToy = MouseToy(x: 80, y: 80)
+        
+        // Start mouse movement animation
+        animateMouseMovement(in: size)
+        
+        // Start progress increase (8 seconds to 100%)
+        startProgressTimer()
+    }
+    
+    private func animateMouseMovement(in size: CGSize) {
+        guard currentMode == .toys, let mouse = mouseToy else { return }
+        
+        // Larger padding to keep mouse visible
+        let padding: CGFloat = 80
+        let waypoints: [(x: CGFloat, y: CGFloat, rotation: Double)] = [
+            (padding, padding, 0),                          // Top-left
+            (size.width - padding, padding, 0),             // Top-right
+            (size.width - padding, size.height - 200, 180), // Bottom-right (avoid bottom bar)
+            (padding, size.height - 200, 180),              // Bottom-left (avoid bottom bar)
+        ]
+        
+        animateToNextWaypoint(waypoints: waypoints, currentIndex: 0, in: size)
+    }
+    
+    private func animateToNextWaypoint(waypoints: [(x: CGFloat, y: CGFloat, rotation: Double)], currentIndex: Int, in size: CGSize) {
+        guard currentMode == .toys, mouseToy != nil else { return }
+        
+        let nextIndex = (currentIndex + 1) % waypoints.count
+        let waypoint = waypoints[nextIndex]
+        
+        withAnimation(.easeInOut(duration: 2.0)) {
+            mouseToy?.x = waypoint.x
+            mouseToy?.y = waypoint.y
+            mouseToy?.rotation = waypoint.rotation
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            self?.animateToNextWaypoint(waypoints: waypoints, currentIndex: nextIndex, in: size)
+        }
+    }
+    
+    private func startProgressTimer() {
+        let totalDuration: Double = 8.0 // 8 seconds
+        let steps = 80 // 80 steps = smooth animation
+        let increment = 100.0 / Double(steps)
+        let stepDuration = totalDuration / Double(steps)
+        
+        for i in 0..<steps {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * stepDuration) { [weak self] in
+                guard let self = self, self.currentMode == .toys else { return }
+                
+                withAnimation(.linear(duration: stepDuration)) {
+                    self.happiness = min(self.happiness + increment, 100)
+                }
+                
+                // Check if completed
+                if self.happiness >= 100 {
+                    self.completeToysSession()
+                }
+            }
+        }
+    }
+    
+    private func completeToysSession() {
+        guard currentMode == .toys else { return }
+        
+        // Stop cat excitement
+        catIsExcited = false
+        
+        // Hide mouse
+        withAnimation(.easeOut(duration: 0.5)) {
+            mouseToy = nil
+        }
+        
+        // Zoom in cat
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            guard let self = self, self.currentMode == .toys else { return }
+            
+            withAnimation(.spring(response: 0.8, dampingFraction: 0.7)) {
+                self.catZoomedIn = true
+            }
+            
+            // Show completion message
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                guard let self = self else { return }
+                withAnimation {
+                    self.showToysComplete = true
+                }
+                
+                // Check if should show celebration
+                if self.happiness >= 100 {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                        guard let self = self, self.currentMode == .toys else { return }
+                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                            self.showFullScreenCelebration = true
+                        }
+                    }
+                }
+                
+                // Hide completion message and reset
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                    guard let self = self else { return }
+                    withAnimation {
+                        self.showToysComplete = false
+                        self.catZoomedIn = false
+                    }
+                    
+                    self.isPlayingWithToy = false
+                }
+            }
+        }
     }
 }
 
 enum ScreenType {
     case welcome, selection, game
+}
+
+enum GameMode {
+    case cuddle, treats, toys
 }
 
 // MARK: - Real Cat Image View
@@ -515,9 +830,12 @@ struct RealCatView: View {
     let isHappy: Bool
     let isIdle: Bool
     let isBeingPetted: Bool
+    let isExcited: Bool
+    let isZoomedIn: Bool
     
     @State private var idleAnimation = false
     @State private var heartBeat = false
+    @State private var shakeOffset: CGFloat = 0
     
     var body: some View {
         ZStack {
@@ -545,8 +863,14 @@ struct RealCatView: View {
             }
             .frame(width: size, height: size)
             .clipShape(RoundedRectangle(cornerRadius: 20))
-            .scaleEffect(isBeingPetted ? 1.1 : (idleAnimation ? 1.02 : 1.0))
-            .rotationEffect(.degrees(isBeingPetted ? 2 : 0))
+            .scaleEffect(
+                isZoomedIn ? 1.35 : (isBeingPetted ? 1.1 : (idleAnimation ? 1.02 : 1.0))
+            )
+            .rotationEffect(.degrees(isBeingPetted ? 2 : (isExcited ? shakeOffset * 2 : 0)))
+            .offset(
+                x: isExcited ? shakeOffset : 0,
+                y: isZoomedIn ? -30 : 0
+            )
             .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
             .overlay(
                 // Happy glow effect
@@ -589,11 +913,27 @@ struct RealCatView: View {
                     heartBeat = true
                 }
             }
+            if isExcited {
+                startShakeAnimation()
+            }
         }
         .onChange(of: isHappy) { newValue in
             withAnimation {
                 heartBeat = newValue
             }
+        }
+        .onChange(of: isExcited) { newValue in
+            if newValue {
+                startShakeAnimation()
+            } else {
+                shakeOffset = 0
+            }
+        }
+    }
+    
+    private func startShakeAnimation() {
+        withAnimation(.easeInOut(duration: 0.1).repeatForever(autoreverses: true)) {
+            shakeOffset = 3
         }
     }
 }
@@ -1144,48 +1484,160 @@ struct GameScreen: View {
                                 size: 250,
                                 isHappy: gameState.happiness > 50,
                                 isIdle: true,
-                                isBeingPetted: gameState.isBeingPetted
+                                isBeingPetted: gameState.isBeingPetted,
+                                isExcited: gameState.catIsExcited,
+                                isZoomedIn: gameState.catZoomedIn
                             )
                             .onTapGesture(coordinateSpace: .local) { location in
-                                gameState.petCat(at: location)
+                                // Only allow petting in cuddle mode
+                                if gameState.currentMode == .cuddle {
+                                    gameState.petCat(at: location)
+                                }
                             }
                         }
                         
-                        // Floating hearts
-                        ForEach(gameState.hearts) { heart in
-                            Image(systemName: "heart.fill")
-                                .foregroundColor(.red)
-                                .font(.title2)
-                                .position(x: heart.x, y: heart.y)
-                                .opacity(heart.opacity)
+                        // Floating hearts (only in cuddle mode)
+                        if gameState.currentMode == .cuddle {
+                            ForEach(gameState.hearts) { heart in
+                                Text("🐾")
+                                    .font(.title2)
+                                    .position(x: heart.x, y: heart.y)
+                                    .opacity(heart.opacity)
+                            }
+                            
+                            ForEach(gameState.sparkles) { sparkle in
+                                Text("🐾")
+                                    .font(.title3)
+                                    .position(x: sparkle.x, y: sparkle.y)
+                                    .opacity(sparkle.opacity)
+                            }
                         }
                         
-                        // Floating sparkles
-                        ForEach(gameState.sparkles) { sparkle in
-                            Image(systemName: "star.fill")
-                                .foregroundColor(.yellow)
-                                .font(.title3)
-                                .position(x: sparkle.x, y: sparkle.y)
-                                .opacity(sparkle.opacity)
+                        // Treats (Fish) - only in treats mode
+                        if gameState.currentMode == .treats {
+                            ForEach(gameState.treats) { treat in
+                                Text("🐟")
+                                    .font(.system(size: 35))
+                                    .position(x: treat.x, y: treat.y)
+                                    .opacity(treat.opacity)
+                                    .scaleEffect(treat.scale)
+                                    .animation(.easeOut(duration: 0.5), value: treat.opacity)
+                                    .animation(.easeOut(duration: 0.5), value: treat.scale)
+                            }
+                        }
+                        
+                        // Mouse Toy - only in toys mode
+                        if gameState.currentMode == .toys, let mouse = gameState.mouseToy {
+                            Text("🐭")
+                                .font(.system(size: 40))
+                                .position(x: mouse.x, y: mouse.y)
+                                .rotationEffect(.degrees(mouse.rotation))
+                                .animation(.easeInOut(duration: 2.0), value: mouse.x)
+                                .animation(.easeInOut(duration: 2.0), value: mouse.y)
+                        }
+                        
+                        // Feeding Complete Message
+                        if gameState.showFeedingComplete {
+                            VStack(spacing: 15) {
+                                Text("😸")
+                                    .font(.system(size: 80))
+                                
+                                Text("Doydum!")
+                                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 30)
+                                    .padding(.vertical, 15)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [Color.orange, Color.pink],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .cornerRadius(20)
+                                    .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
+                            }
+                            .transition(.scale.combined(with: .opacity))
+                            .zIndex(100)
+                        }
+                        
+                        // Toys Complete Message
+                        if gameState.showToysComplete {
+                            VStack(spacing: 15) {
+                                Text("🎯")
+                                    .font(.system(size: 80))
+                                
+                                Text("Yakaladım!")
+                                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 30)
+                                    .padding(.vertical, 15)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [Color.green, Color.blue],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .cornerRadius(20)
+                                    .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
+                            }
+                            .transition(.scale.combined(with: .opacity))
+                            .zIndex(100)
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .onChange(of: gameState.currentMode) { newMode in
+                        // Auto-start feeding when switching to treats mode
+                        if newMode == .treats {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                gameState.startFeeding(in: geometry.size)
+                            }
+                        }
+                        // Auto-start toys when switching to toys mode
+                        if newMode == .toys {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                gameState.startPlayingWithToys(in: geometry.size)
+                            }
+                        }
+                    }
                     
                     // Instructions
                     VStack(spacing: 10) {
-                        Text("Tap and pet \(gameState.selectedCat?.name ?? "your cat")!")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
-                        Text("Watch the happiness meter grow 💖")
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.8))
+                        if gameState.currentMode == .cuddle {
+                            Text("Tap and pet \(gameState.selectedCat?.name ?? "your cat")!")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            
+                            Text("Watch the happiness meter grow 💖")
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.8))
+                        } else if gameState.currentMode == .treats {
+                            Text("Feeding \(gameState.selectedCat?.name ?? "your cat")!")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            
+                            Text("Watch them eat delicious treats 🐟")
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.8))
+                        } else if gameState.currentMode == .toys {
+                            Text("Playing with \(gameState.selectedCat?.name ?? "your cat")!")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            
+                            Text("Watch them chase the mouse! 🐭")
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.8))
+                        }
                     }
                     .padding(.bottom, 30)
                     
-                    // Bottom navigation
-                    HStack(spacing: 40) {
-                        Button(action: {}) {
+                    // Bottom navigation with Primary/Secondary hierarchy
+                    HStack(spacing: 15) {
+                        // Secondary Action - Cuddle
+                        Button(action: {
+                            gameState.switchMode(to: .cuddle)
+                        }) {
                             VStack(spacing: 5) {
                                 Text("🐱")
                                     .font(.title2)
@@ -1193,14 +1645,16 @@ struct GameScreen: View {
                                     .font(.caption)
                                     .fontWeight(.semibold)
                             }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
-                            .background(Color.orange)
-                            .cornerRadius(25)
+                            .foregroundColor(gameState.currentMode == .cuddle ? .white : .orange.opacity(0.8))
+                            .frame(width: 90, height: 70)
+                            .background(gameState.currentMode == .cuddle ? Color.orange.opacity(0.7) : Color.clear)
+                            .cornerRadius(20)
                         }
                         
-                        Button(action: {}) {
+                        // Secondary Action - Treats
+                        Button(action: {
+                            gameState.switchMode(to: .treats)
+                        }) {
                             VStack(spacing: 5) {
                                 Text("🍖")
                                     .font(.title2)
@@ -1208,24 +1662,41 @@ struct GameScreen: View {
                                     .font(.caption)
                                     .fontWeight(.semibold)
                             }
-                            .foregroundColor(.orange)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
+                            .foregroundColor(gameState.currentMode == .treats ? .white : .orange.opacity(0.8))
+                            .frame(width: 90, height: 70)
+                            .background(gameState.currentMode == .treats ? Color.orange.opacity(0.7) : Color.clear)
+                            .cornerRadius(20)
                         }
                         
-                        Button(action: {}) {
+                        // Primary Action - Toys (Same size but more prominent)
+                        Button(action: {
+                            gameState.switchMode(to: .toys)
+                        }) {
                             VStack(spacing: 5) {
                                 Text("⭐")
                                     .font(.title2)
                                 Text("Toys")
                                     .font(.caption)
-                                    .fontWeight(.semibold)
+                                    .fontWeight(.black)
                             }
-                            .foregroundColor(.orange)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
+                            .foregroundColor(.white)
+                            .frame(width: 90, height: 70)
+                            .background(
+                                LinearGradient(
+                                    colors: gameState.currentMode == .toys ? 
+                                        [Color.green, Color.blue] : 
+                                        [Color.orange, Color.pink],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(20)
+                            .shadow(color: gameState.currentMode == .toys ? 
+                                Color.blue.opacity(0.5) : Color.orange.opacity(0.3), 
+                                radius: 8, x: 0, y: 4)
                         }
                     }
+                    .padding(.horizontal, 20)
                     .padding(.bottom, 30)
                 }
                 
