@@ -29,7 +29,6 @@ class GameState: ObservableObject {
 
     // MARK: Treats
     @Published var draggableTreats: [DraggableTreat] = []
-    @Published var showFeedingComplete = false
 
     // MARK: Toys — Feather Wand
     @Published var wandTiltX: Double = 0
@@ -183,14 +182,6 @@ class GameState: ObservableObject {
                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { self.showFullScreenCelebration = true }
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            if self.happiness >= 100 {
-                withAnimation { self.showFeedingComplete = true }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    withAnimation { self.showFeedingComplete = false }
-                }
-            }
-        }
     }
 
     // MARK: - Toys — Feather Wand
@@ -288,7 +279,6 @@ class GameState: ObservableObject {
         purrIntensity = 0
         purrDecay?.cancel()
         draggableTreats.removeAll()
-        showFeedingComplete = false
         stopWand()
     }
 

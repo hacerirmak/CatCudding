@@ -124,22 +124,7 @@ struct GameScreen: View {
                                     .zIndex(20)
                             }
 
-                            if gameState.showFeedingComplete {
-                                VStack(spacing: 10) {
-                                    Text("😸").font(.system(size: 60))
-                                    Text("Doydum! 🐟")
-                                        .font(.system(size: 24, weight: .black, design: .rounded))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 28).padding(.vertical, 12)
-                                        .background(LinearGradient(colors: [.appRose, .appCoral], startPoint: .leading, endPoint: .trailing))
-                                        .clipShape(Capsule())
-                                        .shadow(color: Color.appRose.opacity(0.4), radius: 12, x: 0, y: 5)
-                                }
-                                .transition(.scale(scale: 0.8).combined(with: .opacity))
-                                .zIndex(30)
-                            }
-
-                            if gameState.currentMode == .cuddle {
+if gameState.currentMode == .cuddle {
                                 Color.clear.contentShape(Rectangle())
                                     .gesture(DragGesture(minimumDistance: 0)
                                         .onChanged { v in gameState.startPetting(at: v.location) }
