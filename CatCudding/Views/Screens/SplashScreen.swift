@@ -6,30 +6,31 @@ struct SplashScreen: View {
     var onFinished: () -> Void
 
     var body: some View {
-        GeometryReader { geo in
+        ZStack {
+            // Background matches the sky color of the splash image
+            Color(red: 0.67, green: 0.87, blue: 0.98)
+                .ignoresSafeArea()
+
             Image("SplashImage")
                 .resizable()
-                .scaledToFill()
-                .frame(width: geo.size.width * 0.88, height: geo.size.height * 0.88)
-                .clipped()
-                .frame(width: geo.size.width, height: geo.size.height)
+                .scaledToFit()
+                .ignoresSafeArea()
         }
-        .ignoresSafeArea()
         .scaleEffect(scale)
         .opacity(opacity)
-            .onAppear {
-                withAnimation(.easeOut(duration: 0.5)) {
-                    opacity = 1
-                    scale = 1.0
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.5)) {
+                opacity = 1
+                scale = 1.0
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
+                withAnimation(.easeIn(duration: 0.45)) {
+                    opacity = 0
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
-                    withAnimation(.easeIn(duration: 0.45)) {
-                        opacity = 0
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
-                        onFinished()
-                    }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                    onFinished()
                 }
             }
+        }
     }
 }
