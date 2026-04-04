@@ -270,6 +270,7 @@ class GameState: ObservableObject {
     @Published var showFullScreenCelebration = false
     @Published var customCatImage: UIImage?
     @Published var customCatName = ""
+    @Published var customCat: Cat? = nil
     @Published var currentMode: GameMode = .cuddle
 
     // Cuddle
@@ -294,12 +295,6 @@ class GameState: ObservableObject {
     ]
     let catImages = ["cat1", "cat2", "cat3"]
 
-    var customCat: Cat? {
-        guard customCatImage != nil, !customCatName.isEmpty else { return nil }
-        return Cat(name: customCatName.isEmpty ? "My Cat" : customCatName,
-                   description: "My special friend!", breed: "Custom Cat",
-                   color: .purple, emoji: "💜", isCustom: true)
-    }
 
     private var purrDecay: AnyCancellable?
     private var lastPetTime: Date = .distantPast
@@ -320,8 +315,12 @@ class GameState: ObservableObject {
     func addCustomCat(image: UIImage, name: String) {
         removeBackground(from: image) { processed in
             DispatchQueue.main.async {
+                let resolvedName = name.isEmpty ? "My Cat" : name
                 self.customCatImage = processed ?? image
-                self.customCatName = name.isEmpty ? "My Cat" : name
+                self.customCatName = resolvedName
+                // Stable instance — UUID is fixed at creation, not recreated on each render
+                self.customCat = Cat(name: resolvedName, description: "My special friend!",
+                                     breed: "Custom Cat", color: .purple, emoji: "💜", isCustom: true)
             }
         }
     }
@@ -914,18 +913,10 @@ struct AddCustomCatCard: View {
     @State private var tempCatName = ""
     @State private var selectedImage: UIImage?
     @State private var isProcessingImage = false
+    @State private var photoPickerItem: PhotosPickerItem? = nil
 
     var body: some View {
-        PhotosPicker(selection: Binding<PhotosPickerItem?>(
-            get: { nil },
-            set: { item in
-                Task {
-                    if let item, let data = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: data) {
-                        selectedImage = img; showingNameAlert = true
-                    }
-                }
-            }
-        ), matching: .images) {
+        PhotosPicker(selection: $photoPickerItem, matching: .images) {
             HStack(spacing: 16) {
                 ZStack {
                     Circle().fill(Color.appPurple.opacity(0.18)).frame(width: 56, height: 56)
@@ -952,6 +943,17 @@ struct AddCustomCatCard: View {
                         style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])))
         }
         .buttonStyle(.plain).disabled(isProcessingImage)
+        .onChange(of: photoPickerItem) {
+            guard let item = photoPickerItem else { return }
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self),
+                   let img = UIImage(data: data) {
+                    selectedImage = img
+                    showingNameAlert = true
+                }
+                photoPickerItem = nil
+            }
+        }
         .alert("Name Your Cat", isPresented: $showingNameAlert) {
             TextField("Enter cat name", text: $tempCatName)
             Button("Add Cat") {
