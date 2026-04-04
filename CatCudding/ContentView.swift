@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import Combine
+import CoreMotion
 import PhotosUI
 import Vision
 import CoreImage
@@ -279,11 +280,12 @@ class GameState: ObservableObject {
     @Published var draggableTreats: [DraggableTreat] = []
     @Published var showFeedingComplete = false
 
-    // Toys
-    @Published var laserPosition: CGPoint? = nil
+    // Toys — Feather Wand
+    @Published var wandTiltX: Double = 0        // -1…1, from accelerometer
+    @Published var wandDescendY: Double = 0     // 0 = top, 1 = bottom
     @Published var catIsExcited = false
     @Published var catZoomedIn = false
-    @Published var showPounceEffect = false
+    @Published var showCatchEffect = false
 
     let cats = [
         Cat(name: "Whiskers",      description: "Super playful!",       breed: "Orange Tabby",     color: .orange, emoji: "🧡"),
@@ -301,7 +303,10 @@ class GameState: ObservableObject {
 
     private var purrDecay: AnyCancellable?
     private var lastPetTime: Date = .distantPast
-    private var pounceWork: DispatchWorkItem?
+    private let motionManager = CMMotionManager()
+    private var wandDescentTimer: AnyCancellable?
+    private var wandSwingTimer: AnyCancellable?   // simulator fallback
+    private var catchWork: DispatchWorkItem?
 
     // MARK: Cat
     func selectCat(_ cat: Cat) { selectedCat = cat }
@@ -412,39 +417,81 @@ class GameState: ObservableObject {
         }
     }
 
-    // MARK: Toys
-    func moveLaser(to location: CGPoint) {
-        laserPosition = location
-        catIsExcited = true
-        pounceWork?.cancel()
-        let work = DispatchWorkItem { [weak self] in self?.pounce() }
-        pounceWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: work)
+    // MARK: Toys — Feather Wand
+    func startWand() {
+        wandDescendY = 0
+        wandTiltX = 0
+        if motionManager.isAccelerometerAvailable {
+            motionManager.accelerometerUpdateInterval = 1.0 / 30
+            motionManager.startAccelerometerUpdates(to: .main) { [weak self] data, _ in
+                guard let data = data else { return }
+                withAnimation(.interpolatingSpring(stiffness: 140, damping: 20)) {
+                    self?.wandTiltX = max(-1, min(1, data.acceleration.x * 1.8))
+                }
+            }
+        } else {
+            // Simulator: auto-swing wand left/right
+            var dir = 1.0
+            wandSwingTimer = Timer.publish(every: 0.04, on: .main, in: .common).autoconnect()
+                .sink { [weak self] _ in
+                    guard let self = self, self.currentMode == .toys else { return }
+                    self.wandTiltX = max(-0.75, min(0.75, self.wandTiltX + dir * 0.018))
+                    if abs(self.wandTiltX) >= 0.75 { dir *= -1 }
+                }
+        }
+        startWandDescent()
     }
 
-    func endLaser() {
-        catIsExcited = false
-        pounceWork?.cancel()
-        withAnimation(.easeOut(duration: 0.5)) { laserPosition = nil }
+    private func startWandDescent() {
+        wandDescentTimer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
+            .sink { [weak self] _ in
+                guard let self = self, self.currentMode == .toys else { return }
+                // Descend slowly (~12s to full bottom)
+                self.wandDescendY = min(1.0, self.wandDescendY + 0.004)
+
+                // Cat gets excited when wand enters lower 40%
+                let inReach = self.wandDescendY > 0.60
+                if inReach != self.catIsExcited { self.catIsExcited = inReach }
+
+                if inReach && self.catchWork == nil {
+                    let work = DispatchWorkItem { [weak self] in self?.catCatchWand() }
+                    self.catchWork = work
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2, execute: work)
+                } else if !inReach {
+                    self.catchWork?.cancel(); self.catchWork = nil
+                }
+            }
     }
 
-    private func pounce() {
+    private func catCatchWand() {
         guard currentMode == .toys else { return }
+        catchWork = nil
         AudioServicesPlaySystemSound(1105)
-        showPounceEffect = true
-        withAnimation(.spring(response: 0.22, dampingFraction: 0.45)) { catZoomedIn = true }
-        withAnimation(.easeInOut(duration: 0.3)) { happiness = min(happiness + 20, 100) }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-            self.laserPosition = nil
+        showCatchEffect = true
+        withAnimation(.spring(response: 0.20, dampingFraction: 0.42)) { catZoomedIn = true }
+        withAnimation(.easeInOut(duration: 0.28)) { happiness = min(happiness + 20, 100) }
+        // Wand bounces back to top
+        withAnimation(.spring(response: 0.55, dampingFraction: 0.55)) { wandDescendY = 0 }
+        catIsExcited = false
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.38) {
             withAnimation(.spring(response: 0.55, dampingFraction: 0.7)) { self.catZoomedIn = false }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) {
-            withAnimation { self.showPounceEffect = false }
-            self.catIsExcited = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+            withAnimation { self.showCatchEffect = false }
             if self.happiness >= 100 {
                 withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { self.showFullScreenCelebration = true }
             }
         }
+    }
+
+    func stopWand() {
+        motionManager.stopAccelerometerUpdates()
+        wandSwingTimer?.cancel()
+        wandDescentTimer?.cancel()
+        catchWork?.cancel(); catchWork = nil
+        wandTiltX = 0; wandDescendY = 0
+        catIsExcited = false; catZoomedIn = false; showCatchEffect = false
     }
 
     // MARK: Mode / Reset
@@ -461,8 +508,7 @@ class GameState: ObservableObject {
         isBeingPetted = false; petDragLocation = nil
         purrIntensity = 0; purrDecay?.cancel()
         draggableTreats.removeAll(); showFeedingComplete = false
-        laserPosition = nil; catIsExcited = false; catZoomedIn = false; showPounceEffect = false
-        pounceWork?.cancel()
+        stopWand()
     }
 
     func resetGame() { happiness = 0; showFullScreenCelebration = false; cleanupCurrentMode(); currentMode = .cuddle }
@@ -554,23 +600,51 @@ struct PurrWaveView: View {
     }
 }
 
-struct LaserDotView: View {
-    @State private var pulse = false
+struct FeatherWandView: View {
+    let attachPoint: CGPoint   // top of play area, x = center
+    let tipPoint: CGPoint      // where feather hangs
+    let inReach: Bool          // wand is in cat's reach zone
+    @State private var featherSway: Double = 0
+
     var body: some View {
         ZStack {
-            Circle()
-                .fill(Color.red.opacity(0.15))
-                .frame(width: 48, height: 48)
-                .scaleEffect(pulse ? 2.8 : 1.0)
-                .opacity(pulse ? 0 : 0.6)
-                .animation(.easeOut(duration: 0.65).repeatForever(autoreverses: false), value: pulse)
-            Circle()
-                .fill(RadialGradient(colors: [.white, .red], center: .center, startRadius: 0, endRadius: 7))
-                .frame(width: 14, height: 14)
-                .shadow(color: .red.opacity(0.9), radius: 10)
-                .shadow(color: .red.opacity(0.4), radius: 22)
+            // String — quadratic bezier for natural sag
+            Canvas { ctx, _ in
+                let sag: CGFloat = 18 + abs(tipPoint.x - attachPoint.x) * 0.12
+                let control = CGPoint(
+                    x: (attachPoint.x + tipPoint.x) / 2,
+                    y: (attachPoint.y + tipPoint.y) / 2 + sag
+                )
+                var path = Path()
+                path.move(to: attachPoint)
+                path.addQuadCurve(to: tipPoint, control: control)
+                ctx.stroke(path, with: .color(.white.opacity(0.55)),
+                           style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+            }
+
+            // Stick
+            Capsule()
+                .fill(LinearGradient(
+                    colors: [Color(red:0.65,green:0.45,blue:0.25), Color(red:0.40,green:0.26,blue:0.12)],
+                    startPoint: .top, endPoint: .bottom))
+                .frame(width: 7, height: 55)
+                .rotationEffect(.degrees((tipPoint.x - attachPoint.x) * 0.12), anchor: .top)
+                .position(x: attachPoint.x, y: attachPoint.y + 28)
+
+            // Feather
+            Text("🪶")
+                .font(.system(size: 38))
+                .rotationEffect(.degrees(-30 + (tipPoint.x - attachPoint.x) * 0.25 + featherSway))
+                .scaleEffect(inReach ? 1.18 : 1.0)
+                .shadow(color: inReach ? Color.appRose.opacity(0.7) : Color.white.opacity(0.3), radius: inReach ? 10 : 4)
+                .animation(.spring(response: 0.35, dampingFraction: 0.6), value: inReach)
+                .position(tipPoint)
         }
-        .onAppear { pulse = true }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) {
+                featherSway = 8
+            }
+        }
     }
 }
 
@@ -600,19 +674,19 @@ struct TreatBubble: View {
     }
 }
 
-struct PounceEffect: View {
+struct CatchEffect: View {
     @State private var burst = false
     var body: some View {
         ZStack {
             ForEach(0..<8, id: \.self) { i in
-                Text("⭐").font(.system(size: 18))
-                    .offset(x: burst ? cos(CGFloat(i) * .pi / 4) * 80 : 0,
-                            y: burst ? sin(CGFloat(i) * .pi / 4) * 80 : 0)
+                Text(["🪶","✨","⭐","🌟"][i % 4]).font(.system(size: 20))
+                    .offset(x: burst ? cos(CGFloat(i) * .pi / 4) * 90 : 0,
+                            y: burst ? sin(CGFloat(i) * .pi / 4) * 90 : 0)
                     .opacity(burst ? 0 : 1)
-                    .animation(.easeOut(duration: 0.6).delay(Double(i) * 0.04), value: burst)
+                    .animation(.easeOut(duration: 0.55).delay(Double(i) * 0.04), value: burst)
             }
-            Text("😼").font(.system(size: 44))
-                .scaleEffect(burst ? 0.6 : 1.2)
+            Text("😸").font(.system(size: 48))
+                .scaleEffect(burst ? 0.5 : 1.25)
                 .opacity(burst ? 0 : 1)
                 .animation(.easeOut(duration: 0.5), value: burst)
         }
@@ -982,8 +1056,8 @@ struct GameScreen: View {
             }) else { return 0 }
             return max(-15, min(15, (t.position.x - catCenter.x) * 0.08))
         case .toys:
-            guard let laser = gameState.laserPosition else { return 0 }
-            return max(-20, min(20, (laser.x - catCenter.x) * 0.10))
+            let wandX = catCenter.x + CGFloat(gameState.wandTiltX) * catCenter.x * 0.76
+            return max(-20, min(20, (wandX - catCenter.x) * 0.10))
         }
     }
 
@@ -1066,15 +1140,24 @@ struct GameScreen: View {
                                 }
                             }
 
-                            // Toys: laser dot
-                            if gameState.currentMode == .toys, let laser = gameState.laserPosition {
-                                LaserDotView().position(laser).zIndex(10)
+                            // Toys: feather wand
+                            if gameState.currentMode == .toys {
+                                let attachPoint = CGPoint(x: playGeo.size.width / 2, y: 0)
+                                let tipX = playGeo.size.width / 2 + CGFloat(gameState.wandTiltX) * playGeo.size.width * 0.38
+                                let tipY = playGeo.size.height * 0.06 + CGFloat(gameState.wandDescendY) * playGeo.size.height * 0.58
+                                let tipPoint = CGPoint(x: tipX, y: tipY)
+                                FeatherWandView(
+                                    attachPoint: attachPoint,
+                                    tipPoint: tipPoint,
+                                    inReach: gameState.wandDescendY > 0.60
+                                )
+                                .zIndex(10)
                             }
 
-                            // Pounce effect
-                            if gameState.showPounceEffect {
-                                PounceEffect()
-                                    .position(gameState.laserPosition ?? catCenter)
+                            // Catch effect
+                            if gameState.showCatchEffect {
+                                CatchEffect()
+                                    .position(catCenter)
                                     .transition(.opacity).zIndex(20)
                             }
 
@@ -1101,17 +1184,11 @@ struct GameScreen: View {
                                     )
                             }
 
-                            // Toys gesture overlay
-                            if gameState.currentMode == .toys {
-                                Color.clear.contentShape(Rectangle())
-                                    .gesture(DragGesture(minimumDistance: 0)
-                                        .onChanged { v in gameState.moveLaser(to: v.location) }
-                                        .onEnded { _ in gameState.endLaser() }
-                                    )
-                            }
+                            // Toys: no gesture needed — wand is accelerometer-driven
                         }
                         .onChange(of: gameState.currentMode) {
                             if gameState.currentMode == .treats { gameState.setupTreats(in: playGeo.size) }
+                            if gameState.currentMode == .toys   { gameState.startWand() }
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -1124,7 +1201,7 @@ struct GameScreen: View {
                         case .treats:
                             Label("Drag treats to your cat's mouth!", systemImage: "hand.point.up.left.fill")
                         case .toys:
-                            Label("Touch & drag to move the laser!", systemImage: "laser.burst")
+                            Label("Tilt your phone to swing the wand!", systemImage: "rotate.3d")
                         }
                     }
                     .font(.system(size: 14, weight: .medium, design: .rounded))
@@ -1134,7 +1211,7 @@ struct GameScreen: View {
                     HStack(spacing: 8) {
                         ModeTabButton(icon: "🐱", label: "Cuddle", isActive: gameState.currentMode == .cuddle) { gameState.switchMode(to: .cuddle) }
                         ModeTabButton(icon: "🍖", label: "Treats", isActive: gameState.currentMode == .treats) { gameState.switchMode(to: .treats) }
-                        ModeTabButton(icon: "⭐", label: "Toys",   isActive: gameState.currentMode == .toys)   { gameState.switchMode(to: .toys) }
+                        ModeTabButton(icon: "🪶", label: "Wand",   isActive: gameState.currentMode == .toys)   { gameState.switchMode(to: .toys) }
                     }
                     .padding(6)
                     .background(.ultraThinMaterial)
