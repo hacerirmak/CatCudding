@@ -6,12 +6,16 @@ struct SplashScreen: View {
     var onFinished: () -> Void
 
     var body: some View {
-        Image("SplashImage")
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .ignoresSafeArea()
-            .scaleEffect(scale)
-            .opacity(opacity)
+        GeometryReader { geo in
+            Image("SplashImage")
+                .resizable()
+                .scaledToFill()
+                .frame(width: geo.size.width, height: geo.size.height)
+                .clipped()
+        }
+        .ignoresSafeArea()
+        .scaleEffect(scale)
+        .opacity(opacity)
             .onAppear {
                 withAnimation(.easeOut(duration: 0.5)) {
                     opacity = 1
