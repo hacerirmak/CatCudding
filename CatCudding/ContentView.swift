@@ -270,6 +270,7 @@ class GameState: ObservableObject {
     @Published var showFullScreenCelebration = false
     @Published var customCatImage: UIImage?
     @Published var customCatName = ""
+    @Published var customCat: Cat? = nil
     @Published var currentMode: GameMode = .cuddle
 
     // Cuddle
@@ -294,12 +295,6 @@ class GameState: ObservableObject {
     ]
     let catImages = ["cat1", "cat2", "cat3"]
 
-    var customCat: Cat? {
-        guard customCatImage != nil, !customCatName.isEmpty else { return nil }
-        return Cat(name: customCatName.isEmpty ? "My Cat" : customCatName,
-                   description: "My special friend!", breed: "Custom Cat",
-                   color: .purple, emoji: "💜", isCustom: true)
-    }
 
     private var purrDecay: AnyCancellable?
     private var lastPetTime: Date = .distantPast
@@ -320,8 +315,12 @@ class GameState: ObservableObject {
     func addCustomCat(image: UIImage, name: String) {
         removeBackground(from: image) { processed in
             DispatchQueue.main.async {
+                let resolvedName = name.isEmpty ? "My Cat" : name
                 self.customCatImage = processed ?? image
-                self.customCatName = name.isEmpty ? "My Cat" : name
+                self.customCatName = resolvedName
+                // Stable instance — UUID is fixed at creation, not recreated on each render
+                self.customCat = Cat(name: resolvedName, description: "My special friend!",
+                                     breed: "Custom Cat", color: .purple, emoji: "💜", isCustom: true)
             }
         }
     }
