@@ -134,7 +134,7 @@ class GameState: ObservableObject {
 
     func setupTreats(in size: CGSize) {
         guard draggableTreats.isEmpty else { return }
-        let types: [TreatType] = [.fish, .meat, .shrimp, .tuna, .chicken]
+        let types: [TreatType] = [.fish, .meat, .shrimp, .chicken]
         let bottomY = size.height - 80
         let spacing = size.width / CGFloat(types.count + 1)
         draggableTreats = types.enumerated().map { i, type in

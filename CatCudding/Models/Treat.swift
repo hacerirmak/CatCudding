@@ -1,24 +1,22 @@
 import SwiftUI
 
 enum TreatType: CaseIterable {
-    case fish, meat, shrimp, tuna, chicken
+    case fish, meat, shrimp, chicken
 
     var emoji: String {
         switch self {
         case .fish:    "🐟"
         case .meat:    "🍖"
         case .shrimp:  "🦐"
-        case .tuna:    "🐠"
         case .chicken: "🍗"
         }
     }
     var happinessValue: Double {
         switch self {
-        case .fish:    15
-        case .meat:    25
+        case .fish:    20
+        case .meat:    30
         case .shrimp:  20
-        case .tuna:    20
-        case .chicken: 20
+        case .chicken: 30
         }
     }
     var glowColor: Color {
@@ -26,7 +24,6 @@ enum TreatType: CaseIterable {
         case .fish:    Color.cyan
         case .meat:    Color.red
         case .shrimp:  Color.orange
-        case .tuna:    Color.blue
         case .chicken: Color.yellow
         }
     }
