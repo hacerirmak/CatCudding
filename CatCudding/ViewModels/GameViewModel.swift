@@ -44,6 +44,7 @@ class GameState: ObservableObject {
         Cat(name: "Shadow Pounce", description: "Mischievous explorer",  breed: "Black Kitten",      color: .black,  emoji: "🖤")
     ]
     let catImages = ["cat1", "cat2", "cat3"]
+    @Published var processedCatImages: [UIImage?] = [nil, nil, nil]
 
     private var purrDecay: AnyCancellable?
     private var lastPetTime: Date = .distantPast
@@ -52,13 +53,30 @@ class GameState: ObservableObject {
     private var wandSwingTimer: AnyCancellable?
     private var catchWork: DispatchWorkItem?
 
+    init() {
+        processBuiltInCatImages()
+    }
+
+    private func processBuiltInCatImages() {
+        for (i, name) in catImages.enumerated() {
+            guard let uiImage = UIImage(named: name) else { continue }
+            BackgroundRemovalService.removeBackground(from: uiImage) { processed in
+                DispatchQueue.main.async {
+                    self.processedCatImages[i] = processed
+                }
+            }
+        }
+    }
+
     // MARK: - Cat
 
     func selectCat(_ cat: Cat) { selectedCat = cat }
 
     func getImageForCat(_ cat: Cat) -> Any? {
         if cat.isCustom { return customCatImage }
-        if let i = cats.firstIndex(of: cat) { return catImages[i] }
+        if let i = cats.firstIndex(of: cat) {
+            return processedCatImages[i] ?? catImages[i]
+        }
         return nil
     }
 
