@@ -1,0 +1,16 @@
+import Foundation
+
+struct GameBackground: Identifiable, Equatable {
+    let id: String
+    let name: String
+    let emoji: String
+    let imageName: String?   // nil = default gradient background
+    let isUnlocked: Bool
+
+    static func == (lhs: GameBackground, rhs: GameBackground) -> Bool { lhs.id == rhs.id }
+
+    static let all: [GameBackground] = [
+        GameBackground(id: "default",  name: "Default",  emoji: "🌌", imageName: nil,        isUnlocked: true),
+        GameBackground(id: "meadow",   name: "Meadow",   emoji: "🌿", imageName: "bg_meadow", isUnlocked: true),
+    ]
+}

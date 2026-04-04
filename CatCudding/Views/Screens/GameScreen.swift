@@ -3,6 +3,7 @@ import SwiftUI
 struct GameScreen: View {
     @ObservedObject var gameState: GameState
     @Environment(\.colorScheme) var colorScheme
+    @State private var showBackgroundPicker = false
 
     private func catHeadAngle(catCenter: CGPoint) -> Double {
         switch gameState.currentMode {
@@ -26,8 +27,20 @@ struct GameScreen: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                AppBackground()
-                AmbientGlow()
+                // Background
+                if let imageName = gameState.selectedBackground.imageName {
+                    GeometryReader { geo in
+                        Image(imageName)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .clipped()
+                    }
+                    .ignoresSafeArea()
+                } else {
+                    AppBackground()
+                    AmbientGlow()
+                }
 
                 VStack(spacing: 0) {
                     // Header
@@ -55,7 +68,17 @@ struct GameScreen: View {
                             }
                         }
                         Spacer()
-                        ThemeToggleButton()
+                        HStack(spacing: 8) {
+                            Button(action: { showBackgroundPicker = true }) {
+                                Image(systemName: "photo.on.rectangle")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 42, height: 42)
+                                    .modifier(GlassCard(cornerRadius: 13))
+                            }
+                            .buttonStyle(.plain)
+                            ThemeToggleButton()
+                        }
                     }
                     .padding(.horizontal, 20).padding(.vertical, 12)
 
@@ -169,6 +192,11 @@ struct GameScreen: View {
                     .padding(.horizontal, 40).padding(.bottom, 36)
                 }
 
+                if showBackgroundPicker {
+                    Color.black.opacity(0.001).ignoresSafeArea()
+                        .onTapGesture { showBackgroundPicker = false }
+                }
+
                 if gameState.showFullScreenCelebration, let cat = gameState.selectedCat {
                     FullScreenCelebrationView(
                         imageSource: gameState.getImageForCat(cat),
@@ -179,6 +207,11 @@ struct GameScreen: View {
                     .zIndex(200)
                 }
             }
+        }
+        .sheet(isPresented: $showBackgroundPicker) {
+            BackgroundPickerView(gameState: gameState)
+                .presentationDetents([.fraction(0.45)])
+                .presentationDragIndicator(.hidden)
         }
     }
 }
