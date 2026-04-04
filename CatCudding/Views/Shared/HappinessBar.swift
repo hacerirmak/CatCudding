@@ -2,12 +2,13 @@ import SwiftUI
 
 struct HappinessBar: View {
     let value: Double
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(Color.white.opacity(0.12))
+                    .fill(colorScheme == .dark ? Color.white.opacity(0.12) : Color.black.opacity(0.08))
                     .frame(height: 8)
                 Capsule()
                     .fill(LinearGradient(

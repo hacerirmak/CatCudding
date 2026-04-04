@@ -39,7 +39,7 @@ struct BackButton: View {
         Button(action: action) {
             Image(systemName: "chevron.left")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
                 .frame(width: 42, height: 42)
                 .modifier(GlassCard(cornerRadius: 13))
         }.buttonStyle(.plain)

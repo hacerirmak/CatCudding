@@ -2,6 +2,7 @@ import SwiftUI
 
 struct GlassCard: ViewModifier {
     var cornerRadius: CGFloat = 20
+    @Environment(\.colorScheme) var colorScheme
 
     func body(content: Content) -> some View {
         content
@@ -9,7 +10,7 @@ struct GlassCard: ViewModifier {
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                    .stroke(Color.cardBorder(colorScheme), lineWidth: 1)
             )
     }
 }

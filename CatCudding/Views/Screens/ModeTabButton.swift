@@ -12,7 +12,7 @@ struct ModeTabButton: View {
                 Text(icon).font(.system(size: 22))
                 Text(label)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundColor(isActive ? .white : .white.opacity(0.42))
+                    .foregroundColor(isActive ? .white : .primary.opacity(0.42))
             }
             .frame(minWidth: 72, minHeight: 60)
             .background {

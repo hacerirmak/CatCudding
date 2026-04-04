@@ -5,6 +5,7 @@ struct CatSelectionCard: View {
     let imageSource: Any?
     let isSelected: Bool
     let onTap: () -> Void
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         Button(action: onTap) {
@@ -13,7 +14,7 @@ struct CatSelectionCard: View {
                     Circle()
                         .fill(isSelected
                             ? LinearGradient(colors: [.appRose, .appCoral], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            : LinearGradient(colors: [Color.white.opacity(0.10), Color.white.opacity(0.06)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            : LinearGradient(colors: [Color.cardBackground(colorScheme), Color.cardBackground(colorScheme)], startPoint: .topLeading, endPoint: .bottomTrailing))
                         .frame(width: 58, height: 58)
                     Group {
                         if let name = imageSource as? String {
@@ -25,13 +26,13 @@ struct CatSelectionCard: View {
                         }
                     }
                 }
-                .overlay(Circle().stroke(isSelected ? Color.clear : Color.white.opacity(0.15), lineWidth: 1.5))
+                .overlay(Circle().stroke(isSelected ? Color.clear : Color.cardBorder(colorScheme), lineWidth: 1.5))
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         Text(cat.name)
                             .font(.system(size: 16, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                         if cat.isCustom {
                             Text("CUSTOM")
                                 .font(.system(size: 9, weight: .black))
@@ -43,7 +44,7 @@ struct CatSelectionCard: View {
                     }
                     Text(cat.description)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(.primary.opacity(0.5))
                 }
 
                 Spacer()
@@ -52,20 +53,20 @@ struct CatSelectionCard: View {
                     Circle()
                         .fill(isSelected
                             ? LinearGradient(colors: [Color(red: 0.22, green: 0.78, blue: 0.44), .mint], startPoint: .top, endPoint: .bottom)
-                            : LinearGradient(colors: [Color.white.opacity(0.08), Color.white.opacity(0.04)], startPoint: .top, endPoint: .bottom))
+                            : LinearGradient(colors: [Color.cardBackground(colorScheme), Color.cardBackground(colorScheme)], startPoint: .top, endPoint: .bottom))
                         .frame(width: 28, height: 28)
                     if isSelected {
                         Image(systemName: "checkmark").font(.system(size: 12, weight: .bold)).foregroundColor(.white)
                     }
                 }
-                .overlay(Circle().stroke(Color.white.opacity(isSelected ? 0 : 0.12), lineWidth: 1))
+                .overlay(Circle().stroke(Color.cardBorder(colorScheme).opacity(isSelected ? 0 : 1), lineWidth: 1))
             }
             .padding(16)
             .background {
                 if isSelected {
                     LinearGradient(colors: [Color.appRose.opacity(0.14), Color.appCoral.opacity(0.07)], startPoint: .leading, endPoint: .trailing)
                 } else {
-                    Color.white.opacity(0.07)
+                    Color.cardBackground(colorScheme)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
@@ -74,7 +75,7 @@ struct CatSelectionCard: View {
                     .stroke(
                         isSelected
                             ? LinearGradient(colors: [Color.appRose.opacity(0.8), Color.appCoral.opacity(0.5)], startPoint: .leading, endPoint: .trailing)
-                            : LinearGradient(colors: [Color.white.opacity(0.12), Color.white.opacity(0.06)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            : LinearGradient(colors: [Color.cardBorder(colorScheme), Color.cardBorder(colorScheme)], startPoint: .topLeading, endPoint: .bottomTrailing),
                         lineWidth: isSelected ? 1.5 : 1
                     )
             )

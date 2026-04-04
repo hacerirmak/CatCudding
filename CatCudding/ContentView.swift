@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CatCuddleApp: View {
     @StateObject private var gameState = GameState()
+    @AppStorage("isDarkMode") private var isDarkMode = true
 
     var body: some View {
         ZStack {
@@ -18,6 +19,7 @@ struct CatCuddleApp: View {
             }
         }
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: gameState.currentScreen)
+        .preferredColorScheme(isDarkMode ? .dark : .light)
     }
 }
 

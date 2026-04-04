@@ -8,6 +8,7 @@ struct AddCustomCatCard: View {
     @State private var selectedImage: UIImage?
     @State private var isProcessingImage = false
     @State private var photoPickerItem: PhotosPickerItem? = nil
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         PhotosPicker(selection: $photoPickerItem, matching: .images) {
@@ -28,18 +29,18 @@ struct AddCustomCatCard: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Add Your Cat")
                         .font(.system(size: 16, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                     Text(isProcessingImage ? "Processing image..." : "Upload your own photo!")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(.primary.opacity(0.5))
                 }
                 Spacer()
                 Image(systemName: "arrow.right")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.35))
+                    .foregroundColor(.primary.opacity(0.35))
             }
             .padding(18)
-            .background(Color.white.opacity(0.07))
+            .background(Color.cardBackground(colorScheme))
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)

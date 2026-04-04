@@ -23,10 +23,10 @@ struct SelectionScreen: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Choose Your Cat")
                         .font(.system(size: 30, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                     Text("Find your purrfect pal 🐾")
                         .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.white.opacity(0.55))
+                        .foregroundColor(.primary.opacity(0.55))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 16)

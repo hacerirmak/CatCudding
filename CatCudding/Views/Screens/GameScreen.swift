@@ -2,6 +2,7 @@ import SwiftUI
 
 struct GameScreen: View {
     @ObservedObject var gameState: GameState
+    @Environment(\.colorScheme) var colorScheme
 
     private func catHeadAngle(catCenter: CGPoint) -> Double {
         switch gameState.currentMode {
@@ -43,13 +44,13 @@ struct GameScreen: View {
                                 Text(gameState.selectedCat?.emoji ?? "🐱").font(.system(size: 15))
                                 Text(gameState.selectedCat?.name ?? "")
                                     .font(.system(size: 15, weight: .bold, design: .rounded))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.primary)
                             }
                             HStack(spacing: 8) {
                                 HappinessBar(value: gameState.happiness).frame(width: 120, height: 8)
                                 Text("\(Int(gameState.happiness))%")
                                     .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                    .foregroundColor(.white.opacity(0.7))
+                                    .foregroundColor(.primary.opacity(0.7))
                                     .frame(width: 36, alignment: .leading)
                             }
                         }
@@ -124,7 +125,7 @@ struct GameScreen: View {
                                     .zIndex(20)
                             }
 
-if gameState.currentMode == .cuddle {
+                            if gameState.currentMode == .cuddle {
                                 Color.clear.contentShape(Rectangle())
                                     .gesture(DragGesture(minimumDistance: 0)
                                         .onChanged { v in gameState.startPetting(at: v.location) }
@@ -151,7 +152,7 @@ if gameState.currentMode == .cuddle {
                         }
                     }
                     .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundColor(.white.opacity(0.52))
+                    .foregroundColor(.primary.opacity(0.52))
                     .padding(.bottom, 14)
 
                     // Mode tab bar
@@ -163,8 +164,8 @@ if gameState.currentMode == .cuddle {
                     .padding(6)
                     .background(.ultraThinMaterial)
                     .clipShape(Capsule())
-                    .overlay(Capsule().stroke(Color.white.opacity(0.14), lineWidth: 1))
-                    .shadow(color: Color.black.opacity(0.22), radius: 16, x: 0, y: 6)
+                    .overlay(Capsule().stroke(Color.cardBorder(colorScheme), lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.12), radius: 16, x: 0, y: 6)
                     .padding(.horizontal, 40).padding(.bottom, 36)
                 }
 

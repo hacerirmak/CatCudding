@@ -2,6 +2,7 @@ import SwiftUI
 
 struct WelcomeScreen: View {
     @ObservedObject var gameState: GameState
+    @AppStorage("isDarkMode") private var isDarkMode = true
     @State private var logoFloat: CGFloat = 0
     @State private var contentOpacity: Double = 0
     @State private var contentOffset: CGFloat = 28
@@ -25,11 +26,29 @@ struct WelcomeScreen: View {
                     let (xr, yr, angle) = pawSeeds[i]
                     Text("🐾")
                         .font(.system(size: 20))
-                        .foregroundColor(.white.opacity(0.10))
+                        .foregroundColor(.primary.opacity(0.10))
                         .rotationEffect(.degrees(angle))
                         .position(x: geo.size.width * xr + pawDrift[i].width, y: geo.size.height * yr + pawDrift[i].height)
                         .opacity(pawOpacity)
                 }
+            }
+
+            // Theme toggle
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: { isDarkMode.toggle() }) {
+                        Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.primary)
+                            .frame(width: 42, height: 42)
+                            .modifier(GlassCard(cornerRadius: 13))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing, 20)
+                    .padding(.top, 8)
+                }
+                Spacer()
             }
 
             VStack(spacing: 0) {
@@ -40,9 +59,9 @@ struct WelcomeScreen: View {
                         .fill(LinearGradient(colors: [Color.appRose.opacity(0.25), Color.appPurple.opacity(0.18)], startPoint: .topLeading, endPoint: .bottomTrailing))
                         .frame(width: 130, height: 130).blur(radius: 20)
                     Circle()
-                        .fill(Color.white.opacity(0.07))
+                        .fill(Color.primary.opacity(0.07))
                         .frame(width: 110, height: 110)
-                        .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1))
+                        .overlay(Circle().stroke(Color.primary.opacity(0.18), lineWidth: 1))
                     Text("🐱").font(.system(size: 58))
                 }
                 .offset(y: logoFloat)
@@ -53,10 +72,10 @@ struct WelcomeScreen: View {
                 VStack(spacing: 10) {
                     Text("Cat Cuddle")
                         .font(.system(size: 38, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                     Text("Tap the button to start cuddling\nsome adorable kittens!")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white.opacity(0.62))
+                        .foregroundColor(.primary.opacity(0.62))
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
                 }
@@ -85,7 +104,7 @@ struct WelcomeScreen: View {
 
                 Text("© 2025 CatCudding")
                     .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.22))
+                    .foregroundColor(.primary.opacity(0.22))
                     .padding(.bottom, 32)
                     .opacity(contentOpacity)
             }
