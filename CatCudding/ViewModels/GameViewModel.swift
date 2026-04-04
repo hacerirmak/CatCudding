@@ -184,7 +184,7 @@ class GameState: ObservableObject {
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            if self.draggableTreats.allSatisfy({ $0.isEaten }) {
+            if self.happiness >= 100 {
                 withAnimation { self.showFeedingComplete = true }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                     withAnimation { self.showFeedingComplete = false }
