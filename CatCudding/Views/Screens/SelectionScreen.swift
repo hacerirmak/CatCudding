@@ -17,6 +17,7 @@ struct SelectionScreen: View {
                         }
                     }
                     Spacer()
+                    ThemeToggleButton()
                 }
                 .padding(.horizontal, 20).padding(.top, 8)
 

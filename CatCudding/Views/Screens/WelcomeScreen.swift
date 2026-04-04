@@ -2,7 +2,6 @@ import SwiftUI
 
 struct WelcomeScreen: View {
     @ObservedObject var gameState: GameState
-    @AppStorage("isDarkMode") private var isDarkMode = true
     @State private var logoFloat: CGFloat = 0
     @State private var contentOpacity: Double = 0
     @State private var contentOffset: CGFloat = 28
@@ -33,20 +32,12 @@ struct WelcomeScreen: View {
                 }
             }
 
-            // Theme toggle
             VStack {
                 HStack {
                     Spacer()
-                    Button(action: { isDarkMode.toggle() }) {
-                        Image(systemName: isDarkMode ? "sun.max.fill" : "moon.fill")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
-                            .frame(width: 42, height: 42)
-                            .modifier(GlassCard(cornerRadius: 13))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.trailing, 20)
-                    .padding(.top, 8)
+                    ThemeToggleButton()
+                        .padding(.trailing, 20)
+                        .padding(.top, 8)
                 }
                 Spacer()
             }

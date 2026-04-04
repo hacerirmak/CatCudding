@@ -55,7 +55,7 @@ struct GameScreen: View {
                             }
                         }
                         Spacer()
-                        Color.clear.frame(width: 42, height: 42)
+                        ThemeToggleButton()
                     }
                     .padding(.horizontal, 20).padding(.vertical, 12)
 
