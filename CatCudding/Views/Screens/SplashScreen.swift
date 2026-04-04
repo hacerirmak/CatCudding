@@ -10,8 +10,9 @@ struct SplashScreen: View {
             Image("SplashImage")
                 .resizable()
                 .scaledToFill()
-                .frame(width: geo.size.width, height: geo.size.height)
+                .frame(width: geo.size.width * 0.88, height: geo.size.height * 0.88)
                 .clipped()
+                .frame(width: geo.size.width, height: geo.size.height)
         }
         .ignoresSafeArea()
         .scaleEffect(scale)
