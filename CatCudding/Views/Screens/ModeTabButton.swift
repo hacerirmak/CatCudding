@@ -13,9 +13,6 @@ struct ModeTabButton: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 72, height: 72)
-                Text(label)
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundColor(isActive ? .white : .primary.opacity(0.42))
             }
             .frame(minWidth: 90, minHeight: 84)
             .background {
