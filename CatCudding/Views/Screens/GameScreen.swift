@@ -52,14 +52,8 @@ struct GameScreen: View {
 
                 VStack(spacing: 0) {
                     // Header
-                    HStack(spacing: 8) {
-                        BackButton {
-                            withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
-                                gameState.currentScreen = .selection
-                                gameState.resetGame()
-                            }
-                        }
-                        Spacer()
+                    ZStack {
+                        // Center content — truly centered
                         VStack(spacing: 6) {
                             HStack(spacing: 6) {
                                 Text(gameState.selectedCat?.emoji ?? "🐱").font(.system(size: 15))
@@ -75,25 +69,34 @@ struct GameScreen: View {
                                     .frame(width: 36, alignment: .leading)
                             }
                         }
-                        Spacer()
-                        HStack(spacing: 8) {
-                            Button(action: { showAccessoryShop = true }) {
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                    .frame(width: 42, height: 42)
-                                    .modifier(GlassCard(cornerRadius: 13))
+                        // Left / right sides
+                        HStack {
+                            BackButton {
+                                withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
+                                    gameState.currentScreen = .selection
+                                    gameState.resetGame()
+                                }
                             }
-                            .buttonStyle(.plain)
-                            Button(action: { showBackgroundPicker = true }) {
-                                Image(systemName: "photo.on.rectangle")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                    .frame(width: 42, height: 42)
-                                    .modifier(GlassCard(cornerRadius: 13))
+                            Spacer()
+                            HStack(spacing: 8) {
+                                Button(action: { showAccessoryShop = true }) {
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundColor(.primary)
+                                        .frame(width: 42, height: 42)
+                                        .modifier(GlassCard(cornerRadius: 13))
+                                }
+                                .buttonStyle(.plain)
+                                Button(action: { showBackgroundPicker = true }) {
+                                    Image(systemName: "photo.on.rectangle")
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundColor(.primary)
+                                        .frame(width: 42, height: 42)
+                                        .modifier(GlassCard(cornerRadius: 13))
+                                }
+                                .buttonStyle(.plain)
+                                ThemeToggleButton()
                             }
-                            .buttonStyle(.plain)
-                            ThemeToggleButton()
                         }
                     }
                     .padding(.horizontal, 20).padding(.vertical, 12)
