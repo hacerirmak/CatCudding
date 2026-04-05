@@ -12,12 +12,12 @@ struct ModeTabButton: View {
                 Image(imageName)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 56, height: 56)
+                    .frame(width: 72, height: 72)
                 Text(label)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundColor(isActive ? .white : .primary.opacity(0.42))
             }
-            .frame(minWidth: 80, minHeight: 72)
+            .frame(minWidth: 90, minHeight: 84)
             .background {
                 if isActive {
                     LinearGradient(
