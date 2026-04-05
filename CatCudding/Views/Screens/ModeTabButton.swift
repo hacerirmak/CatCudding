@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ModeTabButton: View {
-    let icon: String
+    let imageName: String
     let label: String
     let isActive: Bool
     let action: () -> Void
@@ -9,7 +9,10 @@ struct ModeTabButton: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
-                Text(icon).font(.system(size: 22))
+                Image(imageName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 36, height: 36)
                 Text(label)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundColor(isActive ? .white : .primary.opacity(0.42))

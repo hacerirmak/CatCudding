@@ -192,9 +192,9 @@ struct GameScreen: View {
 
                     // Mode tab bar
                     HStack(spacing: 8) {
-                        ModeTabButton(icon: "🐱", label: "Cuddle", isActive: gameState.currentMode == .cuddle) { gameState.switchMode(to: .cuddle) }
-                        ModeTabButton(icon: "🍖", label: "Treats", isActive: gameState.currentMode == .treats) { gameState.switchMode(to: .treats) }
-                        ModeTabButton(icon: "🪶", label: "Wand",   isActive: gameState.currentMode == .toys)   { gameState.switchMode(to: .toys) }
+                        ModeTabButton(imageName: "tab_cuddle", label: "Cuddle", isActive: gameState.currentMode == .cuddle) { gameState.switchMode(to: .cuddle) }
+                        ModeTabButton(imageName: "tab_treats", label: "Treats", isActive: gameState.currentMode == .treats) { gameState.switchMode(to: .treats) }
+                        ModeTabButton(imageName: "tab_wand",   label: "Wand",   isActive: gameState.currentMode == .toys)   { gameState.switchMode(to: .toys) }
                     }
                     .padding(6)
                     .background(.ultraThinMaterial)
