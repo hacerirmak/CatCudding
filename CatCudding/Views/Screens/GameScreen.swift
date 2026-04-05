@@ -1,5 +1,24 @@
 import SwiftUI
 
+private struct SceneBackground: View {
+    let scene: BackgroundScene
+
+    var body: some View {
+        Group {
+            if UIImage(named: scene.assetName) != nil {
+                Image(scene.assetName)
+                    .resizable()
+                    .scaledToFill()
+            } else if scene == .default {
+                AppBackground()
+            } else {
+                scene.fallbackGradient
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+
 struct GameScreen: View {
     @ObservedObject var gameState: GameState
     @Environment(\.colorScheme) var colorScheme
@@ -28,20 +47,8 @@ struct GameScreen: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Background
-                if let imageName = gameState.selectedBackground.imageName {
-                    GeometryReader { geo in
-                        Image(imageName)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: geo.size.width, height: geo.size.height)
-                            .clipped()
-                    }
-                    .ignoresSafeArea()
-                } else {
-                    AppBackground()
-                    AmbientGlow()
-                }
+                SceneBackground(scene: gameState.selectedBackground)
+                AmbientGlow()
 
                 VStack(spacing: 0) {
                     // Header
@@ -70,7 +77,6 @@ struct GameScreen: View {
                         }
                         Spacer()
                         HStack(spacing: 8) {
-                            // Accessory shop
                             Button(action: { showAccessoryShop = true }) {
                                 Image(systemName: "sparkles")
                                     .font(.system(size: 15, weight: .semibold))
@@ -79,7 +85,6 @@ struct GameScreen: View {
                                     .modifier(GlassCard(cornerRadius: 13))
                             }
                             .buttonStyle(.plain)
-                            // Background picker
                             Button(action: { showBackgroundPicker = true }) {
                                 Image(systemName: "photo.on.rectangle")
                                     .font(.system(size: 15, weight: .semibold))
@@ -225,8 +230,8 @@ struct GameScreen: View {
             }
         }
         .sheet(isPresented: $showBackgroundPicker) {
-            BackgroundPickerView(gameState: gameState)
-                .presentationDetents([.fraction(0.45)])
+            BackgroundPickerView(selected: $gameState.selectedBackground)
+                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.hidden)
         }
         .sheet(isPresented: $showAccessoryShop) {

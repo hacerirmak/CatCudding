@@ -20,18 +20,8 @@ class GameState: ObservableObject {
     @Published var isBeingPetted = false
     @Published var showFullScreenCelebration = false
 
-    // MARK: Mode
-    @Published var currentMode: GameMode = .cuddle
-
-    // MARK: Cuddle
-    @Published var petDragLocation: CGPoint? = nil
-    @Published var purrIntensity: Double = 0
-
-    // MARK: Treats
-    @Published var draggableTreats: [DraggableTreat] = []
-
     // MARK: Background & Accessories
-    @Published var selectedBackground: GameBackground = GameBackground.all[1]
+    @Published var selectedBackground: BackgroundScene = .default
     @Published var equippedAccessories: Set<String> = []
 
     func toggleAccessory(_ accessory: Accessory) {
@@ -41,6 +31,16 @@ class GameState: ObservableObject {
             equippedAccessories.insert(accessory.id)
         }
     }
+
+    // MARK: Mode
+    @Published var currentMode: GameMode = .cuddle
+
+    // MARK: Cuddle
+    @Published var petDragLocation: CGPoint? = nil
+    @Published var purrIntensity: Double = 0
+
+    // MARK: Treats
+    @Published var draggableTreats: [DraggableTreat] = []
 
     // MARK: Toys — Feather Wand
     @Published var wandTiltX: Double = 0
