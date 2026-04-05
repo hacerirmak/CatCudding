@@ -1,8 +1,28 @@
 import SwiftUI
 
+private struct SceneBackground: View {
+    let scene: BackgroundScene
+
+    var body: some View {
+        Group {
+            if UIImage(named: scene.assetName) != nil {
+                Image(scene.assetName)
+                    .resizable()
+                    .scaledToFill()
+            } else if scene == .default {
+                AppBackground()
+            } else {
+                scene.fallbackGradient
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+
 struct GameScreen: View {
     @ObservedObject var gameState: GameState
     @Environment(\.colorScheme) var colorScheme
+    @State private var showBackgroundPicker = false
 
     private func catHeadAngle(catCenter: CGPoint) -> Double {
         switch gameState.currentMode {
@@ -26,7 +46,7 @@ struct GameScreen: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                AppBackground()
+                SceneBackground(scene: gameState.selectedBackground)
                 AmbientGlow()
 
                 VStack(spacing: 0) {
@@ -55,9 +75,28 @@ struct GameScreen: View {
                             }
                         }
                         Spacer()
-                        ThemeToggleButton()
+                        HStack(spacing: 8) {
+                            Button {
+                                showBackgroundPicker = true
+                            } label: {
+                                Image(systemName: "photo.on.rectangle")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 38, height: 38)
+                                    .background(.ultraThinMaterial)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(Color.cardBorder(colorScheme), lineWidth: 1))
+                            }
+                            ThemeToggleButton()
+                        }
                     }
                     .padding(.horizontal, 20).padding(.vertical, 12)
+                    .sheet(isPresented: $showBackgroundPicker) {
+                        BackgroundPickerView(selected: $gameState.selectedBackground)
+                            .presentationDetents([.medium, .large])
+                            .presentationDragIndicator(.hidden)
+                    }
 
                     // Play area
                     GeometryReader { playGeo in
