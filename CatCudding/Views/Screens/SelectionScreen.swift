@@ -62,7 +62,7 @@ struct SelectionScreen: View {
                             .opacity(cardsVisible ? 1 : 0).offset(y: cardsVisible ? 0 : 22)
                             .animation(.spring(response: 0.5, dampingFraction: 0.75).delay(0.30), value: cardsVisible)
                     }
-                    .padding(.horizontal, 20).padding(.bottom, 16)
+                    .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 16)
                 }
 
                 PrimaryButton(title: "Let's Cuddle! 🐱", action: {
