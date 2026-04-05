@@ -45,12 +45,12 @@ struct GameScreen: View {
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                SceneBackground(scene: gameState.selectedBackground)
-                AmbientGlow()
+        ZStack {
+            SceneBackground(scene: gameState.selectedBackground)
+            AmbientGlow()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                VStack(spacing: 0) {
+            VStack(spacing: 0) {
                     // Header
                     ZStack {
                         // Center content — truly centered
@@ -230,8 +230,9 @@ struct GameScreen: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
                     .zIndex(200)
                 }
-            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea(edges: .bottom)
         .sheet(isPresented: $showBackgroundPicker) {
             BackgroundPickerView(selected: $gameState.selectedBackground)
                 .presentationDetents([.medium, .large])
