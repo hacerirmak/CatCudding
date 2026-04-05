@@ -210,6 +210,7 @@ struct GameScreen: View {
                         catName: cat.name,
                         gameState: gameState
                     )
+                    .ignoresSafeArea()
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
                     .zIndex(200)
                 }
