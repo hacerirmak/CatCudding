@@ -3,6 +3,8 @@ import SwiftUI
 struct GameScreen: View {
     @ObservedObject var gameState: GameState
     @Environment(\.colorScheme) var colorScheme
+    @State private var showBackgroundPicker = false
+    @State private var showAccessoryShop = false
 
     private func catHeadAngle(catCenter: CGPoint) -> Double {
         switch gameState.currentMode {
@@ -26,12 +28,24 @@ struct GameScreen: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                AppBackground()
-                AmbientGlow()
+                // Background
+                if let imageName = gameState.selectedBackground.imageName {
+                    GeometryReader { geo in
+                        Image(imageName)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .clipped()
+                    }
+                    .ignoresSafeArea()
+                } else {
+                    AppBackground()
+                    AmbientGlow()
+                }
 
                 VStack(spacing: 0) {
                     // Header
-                    HStack(spacing: 12) {
+                    HStack(spacing: 8) {
                         BackButton {
                             withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
                                 gameState.currentScreen = .selection
@@ -55,7 +69,27 @@ struct GameScreen: View {
                             }
                         }
                         Spacer()
-                        ThemeToggleButton()
+                        HStack(spacing: 8) {
+                            // Accessory shop
+                            Button(action: { showAccessoryShop = true }) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 42, height: 42)
+                                    .modifier(GlassCard(cornerRadius: 13))
+                            }
+                            .buttonStyle(.plain)
+                            // Background picker
+                            Button(action: { showBackgroundPicker = true }) {
+                                Image(systemName: "photo.on.rectangle")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 42, height: 42)
+                                    .modifier(GlassCard(cornerRadius: 13))
+                            }
+                            .buttonStyle(.plain)
+                            ThemeToggleButton()
+                        }
                     }
                     .padding(.horizontal, 20).padding(.vertical, 12)
 
@@ -69,16 +103,26 @@ struct GameScreen: View {
                             }
 
                             if let cat = gameState.selectedCat {
-                                RealCatView(
-                                    imageSource: gameState.getImageForCat(cat),
-                                    size: 240,
-                                    isHappy: gameState.happiness > 50,
-                                    isIdle: true,
-                                    isBeingPetted: gameState.isBeingPetted,
-                                    isExcited: gameState.catIsExcited,
-                                    isZoomedIn: gameState.catZoomedIn,
-                                    headAngle: catHeadAngle(catCenter: catCenter)
-                                )
+                                let catSize: CGFloat = 240
+                                ZStack {
+                                    RealCatView(
+                                        imageSource: gameState.getImageForCat(cat),
+                                        size: catSize,
+                                        isHappy: gameState.happiness > 50,
+                                        isIdle: true,
+                                        isBeingPetted: gameState.isBeingPetted,
+                                        isExcited: gameState.catIsExcited,
+                                        isZoomedIn: gameState.catZoomedIn,
+                                        headAngle: catHeadAngle(catCenter: catCenter)
+                                    )
+                                    ForEach(Accessory.all.filter { gameState.equippedAccessories.contains($0.id) }) { acc in
+                                        Image(acc.imageName)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: catSize * acc.scale)
+                                            .offset(x: catSize * acc.offsetX, y: catSize * acc.offsetY)
+                                    }
+                                }
                                 .position(catCenter)
                             }
 
@@ -179,6 +223,16 @@ struct GameScreen: View {
                     .zIndex(200)
                 }
             }
+        }
+        .sheet(isPresented: $showBackgroundPicker) {
+            BackgroundPickerView(gameState: gameState)
+                .presentationDetents([.fraction(0.45)])
+                .presentationDragIndicator(.hidden)
+        }
+        .sheet(isPresented: $showAccessoryShop) {
+            AccessoryShopView(gameState: gameState)
+                .presentationDetents([.fraction(0.52)])
+                .presentationDragIndicator(.hidden)
         }
     }
 }

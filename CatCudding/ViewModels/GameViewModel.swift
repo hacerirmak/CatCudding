@@ -30,6 +30,18 @@ class GameState: ObservableObject {
     // MARK: Treats
     @Published var draggableTreats: [DraggableTreat] = []
 
+    // MARK: Background & Accessories
+    @Published var selectedBackground: GameBackground = GameBackground.all[1]
+    @Published var equippedAccessories: Set<String> = []
+
+    func toggleAccessory(_ accessory: Accessory) {
+        if equippedAccessories.contains(accessory.id) {
+            equippedAccessories.remove(accessory.id)
+        } else {
+            equippedAccessories.insert(accessory.id)
+        }
+    }
+
     // MARK: Toys — Feather Wand
     @Published var wandTiltX: Double = 0
     @Published var wandDescendY: Double = 0
