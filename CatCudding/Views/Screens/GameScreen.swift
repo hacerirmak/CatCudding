@@ -51,7 +51,7 @@ struct GameScreen: View {
 
             VStack(spacing: 0) {
                     // Header
-                    ZStack {
+                    ZStack(alignment: .center) {
                         // Center content — truly centered
                         VStack(spacing: 6) {
                             HStack(spacing: 6) {
@@ -90,6 +90,7 @@ struct GameScreen: View {
                             }
                         }
                     }
+                    .frame(maxWidth: .infinity)
                     .padding(.horizontal, 20).padding(.vertical, 12)
 
                     // Play area
