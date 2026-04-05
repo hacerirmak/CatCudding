@@ -119,10 +119,20 @@ struct GameScreen: View {
 
                             if gameState.currentMode == .cuddle {
                                 ForEach(gameState.hearts) { h in
-                                    Text("🐾").font(.title2).position(x: h.x, y: h.y).opacity(h.opacity)
+                                    Image("cuddle_paw")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 48, height: 48)
+                                    .position(x: h.x, y: h.y)
+                                    .opacity(h.opacity)
                                 }
                                 ForEach(gameState.sparkles) { s in
-                                    Text("✨").font(.title3).position(x: s.x, y: s.y).opacity(s.opacity)
+                                    Image("cuddle_sparkle")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 40, height: 40)
+                                    .position(x: s.x, y: s.y)
+                                    .opacity(s.opacity)
                                 }
                             }
 
