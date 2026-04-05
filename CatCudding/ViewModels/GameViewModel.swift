@@ -21,7 +21,18 @@ class GameState: ObservableObject {
     @Published var showFullScreenCelebration = false
 
     // MARK: Background
-    @Published var selectedBackground: GameBackground = GameBackground.all[1]  // meadow default
+    @Published var selectedBackground: GameBackground = GameBackground.all[1]
+
+    // MARK: Accessories
+    @Published var equippedAccessories: Set<String> = []  // Accessory ids
+
+    func toggleAccessory(_ accessory: Accessory) {
+        if equippedAccessories.contains(accessory.id) {
+            equippedAccessories.remove(accessory.id)
+        } else {
+            equippedAccessories.insert(accessory.id)
+        }
+    }
 
     // MARK: Mode
     @Published var currentMode: GameMode = .cuddle

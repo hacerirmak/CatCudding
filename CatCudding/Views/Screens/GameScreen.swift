@@ -4,6 +4,7 @@ struct GameScreen: View {
     @ObservedObject var gameState: GameState
     @Environment(\.colorScheme) var colorScheme
     @State private var showBackgroundPicker = false
+    @State private var showAccessoryShop = false
 
     private func catHeadAngle(catCenter: CGPoint) -> Double {
         switch gameState.currentMode {
@@ -69,6 +70,14 @@ struct GameScreen: View {
                         }
                         Spacer()
                         HStack(spacing: 8) {
+                            Button(action: { showAccessoryShop = true }) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 42, height: 42)
+                                    .modifier(GlassCard(cornerRadius: 13))
+                            }
+                            .buttonStyle(.plain)
                             Button(action: { showBackgroundPicker = true }) {
                                 Image(systemName: "photo.on.rectangle")
                                     .font(.system(size: 15, weight: .semibold))
@@ -92,16 +101,28 @@ struct GameScreen: View {
                             }
 
                             if let cat = gameState.selectedCat {
-                                RealCatView(
-                                    imageSource: gameState.getImageForCat(cat),
-                                    size: 240,
-                                    isHappy: gameState.happiness > 50,
-                                    isIdle: true,
-                                    isBeingPetted: gameState.isBeingPetted,
-                                    isExcited: gameState.catIsExcited,
-                                    isZoomedIn: gameState.catZoomedIn,
-                                    headAngle: catHeadAngle(catCenter: catCenter)
-                                )
+                                let catSize: CGFloat = 240
+                                ZStack {
+                                    RealCatView(
+                                        imageSource: gameState.getImageForCat(cat),
+                                        size: catSize,
+                                        isHappy: gameState.happiness > 50,
+                                        isIdle: true,
+                                        isBeingPetted: gameState.isBeingPetted,
+                                        isExcited: gameState.catIsExcited,
+                                        isZoomedIn: gameState.catZoomedIn,
+                                        headAngle: catHeadAngle(catCenter: catCenter)
+                                    )
+
+                                    // Accessory overlays
+                                    ForEach(Accessory.all.filter { gameState.equippedAccessories.contains($0.id) }) { acc in
+                                        Image(acc.imageName)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: catSize * acc.scale)
+                                            .offset(x: catSize * acc.offsetX, y: catSize * acc.offsetY)
+                                    }
+                                }
                                 .position(catCenter)
                             }
 
@@ -211,6 +232,11 @@ struct GameScreen: View {
         .sheet(isPresented: $showBackgroundPicker) {
             BackgroundPickerView(gameState: gameState)
                 .presentationDetents([.fraction(0.45)])
+                .presentationDragIndicator(.hidden)
+        }
+        .sheet(isPresented: $showAccessoryShop) {
+            AccessoryShopView(gameState: gameState)
+                .presentationDetents([.fraction(0.52)])
                 .presentationDragIndicator(.hidden)
         }
     }
