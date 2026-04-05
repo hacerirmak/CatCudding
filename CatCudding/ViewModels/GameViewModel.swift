@@ -20,6 +20,9 @@ class GameState: ObservableObject {
     @Published var isBeingPetted = false
     @Published var showFullScreenCelebration = false
 
+    // MARK: Background
+    @Published var selectedBackground: BackgroundScene = .default
+
     // MARK: Mode
     @Published var currentMode: GameMode = .cuddle
 
