@@ -122,7 +122,7 @@ struct GameScreen: View {
                                     Image("cuddle_paw")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 48, height: 48)
+                                    .frame(width: 80, height: 80)
                                     .position(x: h.x, y: h.y)
                                     .opacity(h.opacity)
                                 }
@@ -130,7 +130,7 @@ struct GameScreen: View {
                                     Image("cuddle_sparkle")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 40, height: 40)
+                                    .frame(width: 68, height: 68)
                                     .position(x: s.x, y: s.y)
                                     .opacity(s.opacity)
                                 }
