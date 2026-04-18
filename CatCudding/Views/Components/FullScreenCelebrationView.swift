@@ -81,7 +81,7 @@ struct FullScreenCelebrationView: View {
                     .shadow(color: .black.opacity(0.25), radius: 8, x: 0, y: 4)
                 }
                 .buttonStyle(ScalePressStyle())
-                .position(x: w / 2, y: h * 0.065)
+                .position(x: w / 2, y: h * 0.16)
             }
             .onAppear {
                 withAnimation(.spring(response: 0.7, dampingFraction: 0.65).delay(0.1)) { appear = true }
