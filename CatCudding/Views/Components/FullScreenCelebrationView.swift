@@ -58,6 +58,30 @@ struct FullScreenCelebrationView: View {
                 }
                 .buttonStyle(ScalePressStyle())
                 .position(x: w / 2, y: h * 0.915)
+
+                // Ana Sayfaya Dön butonu
+                Button(action: {
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
+                        gameState.showFullScreenCelebration = false
+                        gameState.resetGame()
+                        gameState.currentScreen = .welcome
+                    }
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "house.fill")
+                            .font(.system(size: 15, weight: .semibold))
+                        Text("Ana Sayfaya Dön")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 11)
+                    .background(.ultraThinMaterial)
+                    .clipShape(Capsule())
+                    .shadow(color: .black.opacity(0.25), radius: 8, x: 0, y: 4)
+                }
+                .buttonStyle(ScalePressStyle())
+                .position(x: w / 2, y: h * 0.065)
             }
             .onAppear {
                 withAnimation(.spring(response: 0.7, dampingFraction: 0.65).delay(0.1)) { appear = true }
