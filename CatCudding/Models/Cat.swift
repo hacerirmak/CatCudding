@@ -22,4 +22,28 @@ struct Cat: Identifiable, Equatable {
 }
 
 enum ScreenType { case welcome, selection, game }
-enum GameMode { case cuddle, treats, toys }
+enum GameMode: Identifiable { case cuddle, treats, toys; var id: Self { self } }
+
+enum CustomCatUploadError: Identifiable {
+    case loadFailed, bgRemovalFailed, unsupported, permissionDenied
+    var id: Self { self }
+}
+
+extension GameMode {
+    var displayName: String {
+        switch self { case .cuddle: "Cuddle"; case .treats: "Treats"; case .toys: "Wand" }
+    }
+    var modeEmoji: String {
+        switch self { case .cuddle: "🐾"; case .treats: "🍪"; case .toys: "🧶" }
+    }
+    var subtitle: String {
+        switch self {
+        case .cuddle: "Soft strokes · relaxing"
+        case .treats: "Snacks & rewards · medium"
+        case .toys: "Feather wand · active"
+        }
+    }
+    var toneColor: Color {
+        switch self { case .cuddle: .ccPink; case .treats: .ccMint; case .toys: .ccSky }
+    }
+}

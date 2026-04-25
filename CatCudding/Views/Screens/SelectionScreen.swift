@@ -78,5 +78,8 @@ struct SelectionScreen: View {
                 withAnimation { cardsVisible = true }
             }
         }
+        .fullScreenCover(item: $gameState.customCatError) { error in
+            CustomCatErrorView(gameState: gameState, error: error)
+        }
     }
 }

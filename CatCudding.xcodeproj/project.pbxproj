@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		CC37A5772E7F334100EA7402 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 69A37A502E7F334100EA7402 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 69A37A572E7F334100EA7402;
+			remoteInfo = CatCudding;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		69A37A582E7F334100EA7402 /* CatCudding.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CatCudding.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC37A5722E7F334100EA7402 /* CatCuddingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CatCuddingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +27,22 @@
 			path = CatCudding;
 			sourceTree = "<group>";
 		};
+		CC37A5732E7F334100EA7402 /* CatCuddingTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = CatCuddingTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		69A37A552E7F334100EA7402 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC37A5752E7F334100EA7402 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				69A37A5A2E7F334100EA7402 /* CatCudding */,
+				CC37A5732E7F334100EA7402 /* CatCuddingTests */,
 				69A37A592E7F334100EA7402 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				69A37A582E7F334100EA7402 /* CatCudding.app */,
+				CC37A5722E7F334100EA7402 /* CatCuddingTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +95,29 @@
 			productReference = 69A37A582E7F334100EA7402 /* CatCudding.app */;
 			productType = "com.apple.product-type.application";
 		};
+		CC37A5712E7F334100EA7402 /* CatCuddingTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC37A57B2E7F334100EA7402 /* Build configuration list for PBXNativeTarget "CatCuddingTests" */;
+			buildPhases = (
+				CC37A5742E7F334100EA7402 /* Sources */,
+				CC37A5752E7F334100EA7402 /* Frameworks */,
+				CC37A5762E7F334100EA7402 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CC37A5782E7F334100EA7402 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CC37A5732E7F334100EA7402 /* CatCuddingTests */,
+			);
+			name = CatCuddingTests;
+			packageProductDependencies = (
+			);
+			productName = CatCuddingTests;
+			productReference = CC37A5722E7F334100EA7402 /* CatCuddingTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +130,10 @@
 				TargetAttributes = {
 					69A37A572E7F334100EA7402 = {
 						CreatedOnToolsVersion = 26.0;
+					};
+					CC37A5712E7F334100EA7402 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = 69A37A572E7F334100EA7402;
 					};
 				};
 			};
@@ -100,6 +152,7 @@
 			projectRoot = "";
 			targets = (
 				69A37A572E7F334100EA7402 /* CatCudding */,
+				CC37A5712E7F334100EA7402 /* CatCuddingTests */,
 			);
 		};
 /* End PBXProject section */
@@ -108,6 +161,13 @@
 		69A37A562E7F334100EA7402 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC37A5762E7F334100EA7402 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483487;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -122,7 +182,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC37A5742E7F334100EA7402 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CC37A5782E7F334100EA7402 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 69A37A572E7F334100EA7402 /* CatCudding */;
+			targetProxy = CC37A5772E7F334100EA7402 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		69A37A612E7F334200EA7402 /* Debug */ = {
@@ -329,6 +404,52 @@
 			};
 			name = Release;
 		};
+		CC37A5792E7F334100EA7402 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = P49C59DW74;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hcrirmak.CatCudding.Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CatCudding.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CatCudding";
+			};
+			name = Debug;
+		};
+		CC37A57A2E7F334100EA7402 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = P49C59DW74;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hcrirmak.CatCudding.Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CatCudding.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CatCudding";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -346,6 +467,15 @@
 			buildConfigurations = (
 				69A37A642E7F334200EA7402 /* Debug */,
 				69A37A652E7F334200EA7402 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CC37A57B2E7F334100EA7402 /* Build configuration list for PBXNativeTarget "CatCuddingTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC37A5792E7F334100EA7402 /* Debug */,
+				CC37A57A2E7F334100EA7402 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

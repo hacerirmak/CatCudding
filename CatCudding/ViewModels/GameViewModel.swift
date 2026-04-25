@@ -25,6 +25,24 @@ class GameState: ObservableObject {
 
     // MARK: Mode
     @Published var currentMode: GameMode = .cuddle
+    @Published var pendingModeSwitch: GameMode? = nil
+
+    // MARK: Dialogs
+    @Published var showBackConfirm = false
+
+    // MARK: Custom Cat Errors
+    @Published var customCatError: CustomCatUploadError? = nil
+    @Published var pendingCustomCatImage: UIImage? = nil
+    @Published var pendingCustomCatName: String = ""
+
+    // MARK: Session / Progress
+    var streak: Int = 7
+    private var sessionStartTime: Date = .now
+
+    var sessionDurationFormatted: String {
+        let t = Int(Date().timeIntervalSince(sessionStartTime))
+        return String(format: "%d:%02d", t / 60, t % 60)
+    }
 
     // MARK: Cuddle
     @Published var petDragLocation: CGPoint? = nil
@@ -83,21 +101,38 @@ class GameState: ObservableObject {
     }
 
     func addCustomCat(image: UIImage, name: String) {
+        pendingCustomCatImage = image
+        pendingCustomCatName = name.isEmpty ? "My Cat" : name
         BackgroundRemovalService.removeBackground(from: image) { processed in
             DispatchQueue.main.async {
-                let resolvedName = name.isEmpty ? "My Cat" : name
-                self.customCatImage = processed ?? image
-                self.customCatName = resolvedName
-                self.customCat = Cat(
-                    name: resolvedName,
-                    description: "My special friend!",
-                    breed: "Custom Cat",
-                    color: .purple,
-                    emoji: "💜",
-                    isCustom: true
-                )
+                if let processed = processed {
+                    self.finalizeCustomCat(image: processed, name: self.pendingCustomCatName)
+                    self.pendingCustomCatImage = nil
+                } else {
+                    self.customCatError = .bgRemovalFailed
+                }
             }
         }
+    }
+
+    func useCustomCatPhotoAnyway() {
+        guard let image = pendingCustomCatImage else { return }
+        finalizeCustomCat(image: image, name: pendingCustomCatName)
+        pendingCustomCatImage = nil
+        customCatError = nil
+    }
+
+    private func finalizeCustomCat(image: UIImage, name: String) {
+        customCatImage = image
+        customCatName = name
+        customCat = Cat(
+            name: name,
+            description: "My special friend!",
+            breed: "Custom Cat",
+            color: .purple,
+            emoji: "💜",
+            isCustom: true
+        )
     }
 
     // MARK: - Cuddle
@@ -268,11 +303,27 @@ class GameState: ObservableObject {
 
     func switchMode(to newMode: GameMode) {
         guard newMode != currentMode else { return }
+        pendingModeSwitch = newMode
+    }
+
+    func confirmModeSwitch(keepHappiness: Bool) {
+        guard let newMode = pendingModeSwitch else { return }
+        pendingModeSwitch = nil
         cleanupCurrentMode()
-        withAnimation(.easeOut(duration: 0.3)) { happiness = 0 }
+        if !keepHappiness { withAnimation(.easeOut(duration: 0.3)) { happiness = 0 } }
         showFullScreenCelebration = false
         currentMode = newMode
     }
+
+    func cancelModeSwitch() { pendingModeSwitch = nil }
+
+    func confirmLeave() {
+        showBackConfirm = false
+        resetGame()
+        currentScreen = .selection
+    }
+
+    func startSession() { sessionStartTime = .now }
 
     private func cleanupCurrentMode() {
         hearts.removeAll()

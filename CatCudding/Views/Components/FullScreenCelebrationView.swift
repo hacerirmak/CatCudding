@@ -8,29 +8,25 @@ struct FullScreenCelebrationView: View {
     @State private var appear = false
 
     // Frame position in the 1024×1536 source image (measured in pixels)
-    private let frameTopPct:    CGFloat = 0.400   // ~614 / 1536
-    private let frameBottomPct: CGFloat = 0.800   // ~1229 / 1536
-    private let frameLeftPct:   CGFloat = 0.060   // ~61  / 1024
-    private let frameRightPct:  CGFloat = 0.940   // ~963 / 1024
+    private let frameTopPct:    CGFloat = 0.400
+    private let frameBottomPct: CGFloat = 0.800
+    private let frameLeftPct:   CGFloat = 0.060
+    private let frameRightPct:  CGFloat = 0.940
 
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width
             let h = geo.size.height
 
-            // Computed frame rect on screen
-            let frameX      = w * frameLeftPct
-            let frameW      = w * (frameRightPct - frameLeftPct)
-            let frameY      = h * frameTopPct
-            let frameH      = h * (frameBottomPct - frameTopPct)
+            let frameX       = w * frameLeftPct
+            let frameW       = w * (frameRightPct - frameLeftPct)
+            let frameY       = h * frameTopPct
+            let frameH       = h * (frameBottomPct - frameTopPct)
             let frameCenterX = frameX + frameW / 2
             let frameCenterY = frameY + frameH / 2
-
-            // Cat size: fill frame with a little inset
-            let catSize = min(frameW, frameH) * 0.90
+            let catSize      = min(frameW, frameH) * 0.90
 
             ZStack {
-                // Background illustration
                 Image("amazing_bg")
                     .resizable()
                     .scaledToFill()
@@ -38,7 +34,6 @@ struct FullScreenCelebrationView: View {
                     .clipped()
                     .ignoresSafeArea()
 
-                // Cat image clipped inside the frame
                 CatImageView(imageSource: imageSource)
                     .frame(width: catSize, height: catSize)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -46,46 +41,115 @@ struct FullScreenCelebrationView: View {
                     .scaleEffect(appear ? 1.0 : 0.75)
                     .opacity(appear ? 1 : 0)
 
-                // Transparent button over the "Continue Playing" area (~87–93% of height)
-                Button(action: {
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
-                        gameState.showFullScreenCelebration = false
-                        gameState.happiness = 0
+                // X pill — top right, 44×44
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button(action: dismiss) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundColor(.ccInk)
+                                .frame(width: 44, height: 44)
+                                .background(Color.white.opacity(0.95))
+                                .clipShape(Circle())
+                                .shadow(color: Color(red: 42/255, green: 31/255, blue: 26/255).opacity(0.18), radius: 12, x: 0, y: 4)
+                        }
+                        .buttonStyle(ScalePressStyle())
+                        .padding(.top, 60)
+                        .padding(.trailing, 16)
                     }
-                }) {
-                    Color.clear
-                        .frame(width: w * 0.70, height: h * 0.07)
+                    Spacer()
                 }
-                .buttonStyle(ScalePressStyle())
-                .position(x: w / 2, y: h * 0.915)
+                .zIndex(5)
 
-                // Ana Sayfaya Dön butonu
-                Button(action: {
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
-                        gameState.showFullScreenCelebration = false
-                        gameState.resetGame()
-                        gameState.currentScreen = .welcome
+                // Stats card + CTAs anchored to bottom
+                VStack(spacing: 8) {
+                    Spacer()
+
+                    // Stats card
+                    HStack(spacing: 0) {
+                        CelebrationStat(value: "\(Int(gameState.happiness))%", label: "Happiness")
+                        Divider()
+                            .frame(height: 36)
+                            .background(Color.ccLine)
+                        CelebrationStat(value: gameState.sessionDurationFormatted, label: "Time")
+                        Divider()
+                            .frame(height: 36)
+                            .background(Color.ccLine)
+                        CelebrationStat(value: "\(gameState.streak) 🔥", label: "Day streak")
                     }
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "house.fill")
-                            .font(.system(size: 15, weight: .semibold))
-                        Text("Ana Sayfaya Dön")
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    }
-                    .foregroundColor(.white)
+                    .padding(.vertical, 14)
+                    .background(Color.white.opacity(0.95))
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    .shadow(color: Color(red: 42/255, green: 31/255, blue: 26/255).opacity(0.20), radius: 30, x: 0, y: 12)
+                    .opacity(appear ? 1 : 0)
+                    .offset(y: appear ? 0 : 16)
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 11)
-                    .background(.ultraThinMaterial)
-                    .clipShape(Capsule())
-                    .shadow(color: .black.opacity(0.25), radius: 8, x: 0, y: 4)
+
+                    // Continue CTA
+                    Button(action: dismiss) {
+                        HStack(spacing: 6) {
+                            Text("Continue")
+                                .font(.system(size: 17, weight: .bold, design: .rounded))
+                            Text("→")
+                                .font(.system(size: 17, weight: .bold))
+                        }
+                        .foregroundColor(.ccPeachDeep)
+                        .frame(maxWidth: .infinity, minHeight: 56)
+                        .background(Color.white)
+                        .clipShape(Capsule())
+                        .shadow(color: Color(red: 42/255, green: 31/255, blue: 26/255).opacity(0.10), radius: 0, x: 0, y: 3)
+                    }
+                    .buttonStyle(ScalePressStyle())
+                    .padding(.horizontal, 20)
+
+                    // Back to Home (secondary ghost)
+                    Button(action: goHome) {
+                        Text("Back to Home")
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundColor(.white.opacity(0.85))
+                    }
+                    .buttonStyle(ScalePressStyle())
+                    .padding(.bottom, 40)
                 }
-                .buttonStyle(ScalePressStyle())
-                .position(x: w / 2, y: h * 0.16)
+                .zIndex(5)
             }
             .onAppear {
                 withAnimation(.spring(response: 0.7, dampingFraction: 0.65).delay(0.1)) { appear = true }
+                gameState.startSession()
             }
         }
+    }
+
+    private func dismiss() {
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
+            gameState.showFullScreenCelebration = false
+            gameState.happiness = 0
+        }
+    }
+
+    private func goHome() {
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
+            gameState.showFullScreenCelebration = false
+            gameState.resetGame()
+            gameState.currentScreen = .welcome
+        }
+    }
+}
+
+private struct CelebrationStat: View {
+    let value: String
+    let label: String
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundColor(.ccInk)
+            Text(label)
+                .font(.system(size: 11.5, weight: .semibold))
+                .foregroundColor(.ccInk3)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
