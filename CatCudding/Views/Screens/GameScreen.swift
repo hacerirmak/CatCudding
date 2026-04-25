@@ -71,9 +71,8 @@ struct GameScreen: View {
                         // Left / right sides
                         HStack {
                             BackButton {
-                                withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
-                                    gameState.currentScreen = .selection
-                                    gameState.resetGame()
+                                withAnimation(.spring(response: 0.35)) {
+                                    gameState.showBackConfirm = true
                                 }
                             }
                             Spacer()
@@ -214,13 +213,26 @@ struct GameScreen: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
                     .zIndex(200)
                 }
+
+                if gameState.showBackConfirm {
+                    GameBackConfirmOverlay(gameState: gameState)
+                        .ignoresSafeArea()
+                        .zIndex(300)
+                }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea(edges: .bottom)
+        .onAppear { gameState.startSession() }
         .sheet(isPresented: $showBackgroundPicker) {
             BackgroundPickerView(selected: $gameState.selectedBackground)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.hidden)
+        }
+        .sheet(item: $gameState.pendingModeSwitch) { targetMode in
+            ModeSwitchConfirmSheet(gameState: gameState, targetMode: targetMode)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.hidden)
+                .presentationCornerRadius(32)
         }
     }
 }

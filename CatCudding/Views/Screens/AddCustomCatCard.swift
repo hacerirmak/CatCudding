@@ -54,8 +54,17 @@ struct AddCustomCatCard: View {
         .onChange(of: photoPickerItem) {
             guard let item = photoPickerItem else { return }
             Task {
-                if let data = try? await item.loadTransferable(type: Data.self),
-                   let img = UIImage(data: data) {
+                guard let data = try? await item.loadTransferable(type: Data.self) else {
+                    await MainActor.run { gameState.customCatError = .loadFailed }
+                    photoPickerItem = nil
+                    return
+                }
+                guard let img = UIImage(data: data) else {
+                    await MainActor.run { gameState.customCatError = .unsupported }
+                    photoPickerItem = nil
+                    return
+                }
+                await MainActor.run {
                     selectedImage = img
                     showingNameAlert = true
                 }
@@ -68,7 +77,7 @@ struct AddCustomCatCard: View {
                 if let img = selectedImage {
                     isProcessingImage = true
                     gameState.addCustomCat(image: img, name: tempCatName)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
                         tempCatName = ""
                         selectedImage = nil
                         isProcessingImage = false
